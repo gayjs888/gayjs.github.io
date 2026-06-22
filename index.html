@@ -1,0 +1,3156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>港澳六合彩智能预测系统</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #4f46e5;
+            --accent: #ec4899;
+            --background: #f8fafc;
+            --text: #1e293b;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --glass: rgba(255, 255, 255, 0.85);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --blue-wave: #3b82f6;
+            --green-wave: #10b981;
+            --red-wave: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .control-floating-btn {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border-radius: 999px;
+            padding: 0.75rem 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+        }
+        .control-floating-btn:hover {
+            background: var(--card-bg);
+            transform: translateY(-2px);
+        }
+
+        .control-panel {
+            position: fixed;
+            top: 4.5rem;
+            right: 1rem;
+            width: 97%;
+            max-width: 600px;
+            background: var(--card-bg);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transform: translateY(-20px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 99;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .control-panel.active {
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            backdrop-filter: blur(10px);
+            display: inline-block;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.85rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            border-radius: 1rem;
+            padding: 1.1rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+            min-width: 0;
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .prediction-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .wave-prediction-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .prediction-card {
+            background: linear-gradient(150deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.2rem;
+            border-radius: 1rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            border: 2px solid transparent;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+        .prediction-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+        .prediction-card.selected {
+            border: 3px solid #ffd700;
+            transform: translateY(-4px) scale(1.03);
+            box-shadow: 0 10px 28px rgba(255, 215, 0, 0.45);
+            animation: pulseGold 1.2s infinite;
+        }
+        .prediction-card.middle-seven-highlight {
+            border: 2px dashed rgba(255, 255, 255, 0.6);
+            background: linear-gradient(150deg, #5b5ff3, #3d3fc4);
+        }
+        .prediction-card.side-five-highlight {
+            border: 2px dotted rgba(255, 255, 255, 0.4);
+        }
+        .wave-card {
+            background: linear-gradient(150deg, #3b82f6, #2563eb);
+            color: white;
+            padding: 1.2rem;
+            border-radius: 1rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            border: 2px solid transparent;
+            min-height: 130px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            text-align: center;
+        }
+        .wave-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+        .wave-card.selected {
+            border: 3px solid #ffd700;
+            transform: translateY(-4px) scale(1.03);
+            box-shadow: 0 10px 28px rgba(255, 215, 0, 0.45);
+            animation: pulseGold 1.2s infinite;
+        }
+        .wave-card.wave-red {
+            background: linear-gradient(150deg, #ef4444, #dc2626);
+        }
+        .wave-card.wave-blue {
+            background: linear-gradient(150deg, #3b82f6, #2563eb);
+        }
+        .wave-card.wave-green {
+            background: linear-gradient(150deg, #10b981, #059669);
+        }
+
+        .kill-prediction-card {
+            background: linear-gradient(150deg, var(--danger), #dc2626);
+            color: white;
+            padding: 1.2rem;
+            border-radius: 1rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            border: 2px solid transparent;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+        .kill-prediction-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
+        }
+        .kill-prediction-card.selected {
+            border: 3px solid #ffd700;
+            transform: translateY(-4px) scale(1.03);
+            box-shadow: 0 10px 28px rgba(255, 215, 0, 0.45);
+            animation: pulseGold 1.2s infinite;
+        }
+
+        .current-result {
+            background: var(--glass);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .number-grid {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+
+        .number-item {
+            position: relative;
+            text-align: center;
+            cursor: default;
+            pointer-events: none;
+            transition: transform 0.2s ease;
+        }
+        .number-item.selectable {
+            pointer-events: auto;
+            cursor: pointer;
+        }
+        .number-item.selectable:hover {
+            transform: scale(1.08);
+        }
+        .number-item.selected-num .number-circle {
+            box-shadow: 0 0 0 4px #ffd700, 0 0 16px rgba(255, 215, 0, 0.5);
+            transform: scale(1.06);
+        }
+
+        .number-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 1.15rem;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
+            transition: all 0.25s ease;
+            position: relative;
+        }
+        .number-circle .order-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ffd700;
+            color: #1e293b;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .number-circle.special-badge {
+            box-shadow: 0 0 0 4px #ffd700, 0 0 20px rgba(255, 215, 0, 0.6);
+        }
+
+        .zodiac-element {
+            font-size: 1.1rem;
+            margin-top: 0.3rem;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .result-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .history-item {
+            background: white;
+            padding: 1.2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+        .history-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .history-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .history-item.hit-mark {
+            border-left: 4px solid var(--success);
+            background: rgba(16, 200, 150, 0.06);
+        }
+        .history-item.miss-mark {
+            border-left: 4px solid var(--danger);
+            background: rgba(250, 50, 50, 0.05);
+        }
+        .history-item.manual-entry {
+            border-top: 2px dashed #f59e0b;
+        }
+        .history-item.plan-one-hit {
+            border-right: 4px solid #8b5cf6;
+        }
+        .history-item.plan-two-hit {
+            border-right: 4px solid #6366f1;
+        }
+        .history-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .prediction-tags {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+        .prediction-tag {
+            padding: 0.3rem 0.65rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: all 0.2s ease;
+            flex-wrap: wrap;
+            line-height: 1.3;
+        }
+        .prediction-tag:hover {
+            background: rgba(99, 102, 241, 0.18);
+        }
+        .prediction-tag .tag-nums {
+            font-size: 0.68rem;
+            opacity: 0.75;
+            color: #4f46e5;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+        .prediction-tag.middle-seven-tag {
+            border-style: dashed;
+            border-color: #8b5cf6;
+            background: rgba(139, 92, 246, 0.07);
+        }
+        .prediction-tag.side-five-tag {
+            border-style: dotted;
+            border-color: #a5b4fc;
+            background: rgba(165, 180, 252, 0.05);
+        }
+        .wave-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.3rem 0.65rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+        }
+        .wave-tag.wave-red {
+            background: #ef4444;
+        }
+        .wave-tag.wave-blue {
+            background: #3b82f6;
+        }
+        .wave-tag.wave-green {
+            background: #10b981;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.2rem 0;
+        }
+        .slider-container label {
+            min-width: 100px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        .param-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .param-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .param-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        .number-combination {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+        .plus-between {
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin: 0 1rem;
+            font-weight: bold;
+        }
+
+        .legal-notice {
+            text-align: center;
+            margin-top: 2rem;
+            color: #64748b;
+            font-size: 0.85rem;
+            opacity: 0.7;
+        }
+
+        .api-btn {
+            padding: 0.7rem 1.2rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--primary);
+            background: rgba(99, 102, 241, 0.08);
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            width: 100%;
+        }
+        .api-btn:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.2);
+        }
+
+        .tab-container {
+            display: flex;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 0;
+        }
+        .tab {
+            padding: 0.7rem 1.2rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #64748b;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+        .tab:hover {
+            color: var(--primary);
+        }
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        .finance-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .finance-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .finance-input-group label {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+        .finance-input-group input {
+            padding: 0.7rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        .finance-input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+        #applyFinance {
+            grid-column: 1 / -1;
+            padding: 0.9rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            margin-top: 0.5rem;
+            font-size: 1rem;
+        }
+        #applyFinance:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(79, 70, 229, 0.2);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 2.5rem;
+            padding: 0.25rem 0.5rem;
+            background: var(--primary);
+            color: white;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .copy-buttons {
+            display: flex;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+        }
+        .copy-btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 0.9rem;
+            border-radius: 0.75rem;
+            border: none;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+        }
+        .copy-btn:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(79, 70, 229, 0.2);
+        }
+        .plan-btn {
+            flex: 1;
+            min-width: 160px;
+            padding: 0.9rem;
+            border-radius: 0.75rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            color: white;
+        }
+        .plan-btn.plan-one {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+        .plan-btn.plan-two {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+        }
+        .plan-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+        }
+        .plan-btn.active-plan {
+            box-shadow: 0 0 0 4px #ffd700, 0 6px 24px rgba(255, 215, 0, 0.5);
+            animation: pulseGold 1.2s infinite;
+        }
+
+        .zodiac-container {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+            margin: 1.5rem 0;
+        }
+        .zodiac-container.expanded {
+            max-height: 3000px;
+        }
+
+        #zodiacToggle,
+        #monthlyToggle {
+            padding: 1rem;
+            background: var(--glass);
+            border-radius: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            margin: 1.5rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+        #zodiacToggle:hover,
+        #monthlyToggle:hover {
+            background: var(--card-bg);
+            transform: translateY(-2px);
+        }
+
+        .finance-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        .finance-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+        .finance-label {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+        .finance-value {
+            font-weight: 500;
+            font-size: 1rem;
+        }
+        .finance-positive {
+            color: var(--success);
+        }
+        .finance-negative {
+            color: var(--danger);
+        }
+
+        .compact-numbers {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin: 0.75rem 0;
+            text-align: center;
+        }
+        .zodiac-tag {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 0.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+        .middle-seven-badge {
+            display: inline-block;
+            background: #8b5cf6;
+            color: white;
+            font-size: 0.6rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 999px;
+            margin-left: 0.3rem;
+            font-weight: 500;
+            vertical-align: middle;
+        }
+        .side-five-badge {
+            display: inline-block;
+            background: #a5b4fc;
+            color: #1e293b;
+            font-size: 0.6rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 999px;
+            margin-left: 0.3rem;
+            font-weight: 500;
+            vertical-align: middle;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .loader {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        .storage-notice {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            padding: 0.9rem 1.4rem;
+            background: var(--success);
+            color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            transform: translateY(120px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        .storage-notice.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .manual-entry-panel {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            border: 2px dashed rgba(99, 102, 241, 0.3);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease, padding 0.5s ease, border 0.5s ease;
+            padding-top: 0;
+            padding-bottom: 0;
+            border-width: 0;
+        }
+        .manual-entry-panel.expanded {
+            max-height: 1200px;
+            padding: 1.5rem;
+            border-width: 2px;
+        }
+        .manual-toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.7rem 1.3rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--warning);
+            background: rgba(245, 158, 11, 0.08);
+            color: #b45309;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+        }
+        .manual-toggle-btn:hover {
+            background: var(--warning);
+            color: white;
+            transform: translateY(-2px);
+        }
+        .manual-toggle-btn.active-manual {
+            background: var(--warning);
+            color: white;
+        }
+
+        .number-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            max-width: 420px;
+            margin: 1rem auto;
+        }
+        .number-picker-cell {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+            color: white;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            position: relative;
+            user-select: none;
+            min-width: 38px;
+            border: 3px solid transparent;
+        }
+        .number-picker-cell:hover {
+            transform: scale(1.1);
+            z-index: 2;
+        }
+        .number-picker-cell.selected-pick {
+            border-color: #ffd700 !important;
+            box-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+            transform: scale(1.08);
+            z-index: 2;
+        }
+        .number-picker-cell.special-pick {
+            border-color: #ff4444 !important;
+            box-shadow: 0 0 16px rgba(255, 68, 68, 0.6);
+            animation: pulseRed 1s infinite;
+        }
+        .pick-order-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ffd700;
+            color: #1e293b;
+            font-size: 0.65rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3;
+        }
+        .selected-numbers-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+            justify-content: center;
+            margin: 1rem 0;
+            min-height: 40px;
+        }
+        .selected-tag {
+            padding: 0.4rem 0.8rem;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            animation: popIn 0.3s ease;
+        }
+        .selected-tag.normal-tag {
+            background: #e0e7ff;
+            color: #4f46e5;
+            border: 1px solid #c7d2fe;
+        }
+        .selected-tag.special-tag {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 2px solid #fca5a5;
+            font-size: 1rem;
+        }
+
+        .manual-form-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+            margin: 0.75rem 0;
+        }
+        .manual-form-row label {
+            font-weight: 500;
+            min-width: 50px;
+            font-size: 0.9rem;
+        }
+        .manual-form-row input {
+            padding: 0.6rem 0.8rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            font-size: 1rem;
+            flex: 1;
+            min-width: 120px;
+            transition: all 0.3s ease;
+        }
+        .manual-form-row input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+        .btn-submit-manual {
+            padding: 0.8rem 2rem;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+        .btn-submit-manual:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+        }
+        .btn-clear-manual {
+            padding: 0.8rem 1.5rem;
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+        .btn-clear-manual:hover {
+            background: #e2e8f0;
+        }
+        .manual-entry-list {
+            margin-top: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .manual-entry-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0.75rem;
+            background: #f8fafc;
+            border-radius: 0.5rem;
+            margin: 0.3rem 0;
+            font-size: 0.85rem;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .btn-delete-manual {
+            padding: 0.3rem 0.7rem;
+            background: #fee2e2;
+            color: #dc2626;
+            border: none;
+            border-radius: 0.4rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+        }
+        .btn-delete-manual:hover {
+            background: #fca5a5;
+            color: white;
+        }
+        .manual-badge {
+            display: inline-block;
+            background: #fef3c7;
+            color: #b45309;
+            padding: 0.15rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .wave-section-divider {
+            border-top: 2px solid rgba(99, 102, 241, 0.2);
+            margin: 0.5rem 0;
+            padding-top: 0.5rem;
+        }
+        .wave-history-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            font-size: 0.82rem;
+            padding: 0.4rem 0;
+        }
+        .wave-mini-card {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.55rem;
+            border-radius: 0.4rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+        }
+        .wave-mini-card.wave-red {
+            background: #ef4444;
+        }
+        .wave-mini-card.wave-blue {
+            background: #3b82f6;
+        }
+        .wave-mini-card.wave-green {
+            background: #10b981;
+        }
+        .kill-tail-alert {
+            background: linear-gradient(135deg, #fff5f5, #fee2e2);
+            border: 2px solid #ef4444;
+            border-radius: 1rem;
+            padding: 0.8rem 1.2rem;
+            margin: 1.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .kill-tail-badge {
+            background: #dc2626;
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 900;
+            padding: 0.3rem 1.2rem;
+            border-radius: 0.75rem;
+            animation: pulseRed 1.2s infinite;
+            letter-spacing: 0.1em;
+        }
+        .plan-display-area {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.5s ease;
+            padding-top: 0;
+            padding-bottom: 0;
+            border-width: 0;
+            opacity: 0;
+        }
+        .plan-display-area.expanded {
+            max-height: 3000px;
+            padding: 1.5rem;
+            border-width: 2px;
+            opacity: 1;
+        }
+        .plan-display-area h3 {
+            color: #7c3aed;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        .plan-display-area .plan-zodiacs {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #4f46e5;
+            margin-bottom: 0.75rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            align-items: center;
+        }
+        .plan-display-area .plan-zodiacs span {
+            background: #e0e7ff;
+            padding: 0.2rem 0.6rem;
+            border-radius: 0.4rem;
+            white-space: nowrap;
+        }
+        .plan-display-area .plan-numbers-section {
+            margin: 0.75rem 0;
+            padding: 0.75rem;
+            background: #f8fafc;
+            border-radius: 0.75rem;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        .plan-display-area .plan-numbers-section strong {
+            color: #4f46e5;
+        }
+        .plan-display-area .plan-numbers-main {
+            color: #2563eb;
+            font-weight: 600;
+        }
+        .plan-display-area .plan-numbers-defend {
+            color: #dc2626;
+            font-weight: 600;
+        }
+        .plan-display-area .plan-kill-tail-note {
+            display: inline-block;
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 0.2rem 0.7rem;
+            border-radius: 0.4rem;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin: 0.5rem 0;
+        }
+        .history-filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .history-filter-tab {
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            border: 2px solid #e2e8f0;
+            background: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+        .history-filter-tab:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .history-filter-tab.active-filter {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .history-filter-tab.filter-plan-one.active-filter {
+            background: #8b5cf6;
+            border-color: #8b5cf6;
+        }
+        .history-filter-tab.filter-plan-two.active-filter {
+            background: #6366f1;
+            border-color: #6366f1;
+        }
+        .plan-one-mini-badge {
+            display: inline-block;
+            background: #8b5cf6;
+            color: white;
+            padding: 0.15rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 0.3rem;
+        }
+        .plan-two-mini-badge {
+            display: inline-block;
+            background: #6366f1;
+            color: white;
+            padding: 0.15rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 0.3rem;
+        }
+        .history-plan-row {
+            font-size: 0.8rem;
+            margin-top: 0.4rem;
+            padding-top: 0.4rem;
+            border-top: 1px dashed #e2e8f0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            align-items: center;
+        }
+        .history-plan-row .plan-hit-badge {
+            padding: 0.2rem 0.55rem;
+            border-radius: 0.4rem;
+            font-weight: 600;
+            font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+        }
+        .history-plan-row .plan-hit-badge.plan-hit-yes {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .history-plan-row .plan-hit-badge.plan-hit-no {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .plan-hit-detail {
+            font-size: 0.75rem;
+            display: inline-flex;
+            gap: 0.8rem;
+            margin-left: 0.5rem;
+            color: #64748b;
+        }
+        .plan-hit-detail span {
+            font-weight: 600;
+        }
+        .plan-hit-detail .hit-yes {
+            color: #10b981;
+        }
+        .plan-hit-detail .hit-no {
+            color: #ef4444;
+        }
+
+        .plan-validation-card {
+            background: #f8fafc;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-left: 4px solid;
+        }
+        .plan-validation-card.plan-one-card {
+            border-left-color: #8b5cf6;
+        }
+        .plan-validation-card.plan-two-card {
+            border-left-color: #6366f1;
+        }
+        .validation-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            margin-bottom: 0.3rem;
+        }
+        .validation-label {
+            font-weight: 500;
+            color: #475569;
+        }
+        .validation-result {
+            font-weight: 700;
+            margin-left: 0.5rem;
+        }
+        .validation-result.hit {
+            color: var(--success);
+        }
+        .validation-result.miss {
+            color: var(--danger);
+        }
+
+        .wave-prediction-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.55rem;
+            border-radius: 0.4rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: white;
+        }
+        .wave-prediction-badge.wave-red { background: #ef4444; }
+        .wave-prediction-badge.wave-blue { background: #3b82f6; }
+        .wave-prediction-badge.wave-green { background: #10b981; }
+
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+            }
+            to {
+                box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+            }
+        }
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        @keyframes pulseGold {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.5);
+            }
+            70% {
+                box-shadow: 0 0 0 18px rgba(255, 215, 0, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+            }
+        }
+        @keyframes pulseRed {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.5);
+            }
+            70% {
+                box-shadow: 0 0 0 14px rgba(255, 68, 68, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 68, 68, 0);
+            }
+        }
+        @keyframes popIn {
+            from {
+                transform: scale(0.6);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0.8rem;
+            }
+            .container {
+                padding: 0.8rem;
+            }
+            .header h1 {
+                font-size: 1.5rem;
+                padding: 0.6rem 1rem;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.5rem;
+            }
+            .prediction-grid {
+                grid-template-columns: 1fr;
+            }
+            .wave-prediction-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
+            }
+            .control-panel {
+                width: 95%;
+                right: 0.3rem;
+                padding: 1rem;
+            }
+            .plus-between {
+                font-size: 1.8rem;
+                margin: 0 0.3rem;
+            }
+            .number-circle {
+                width: 40px;
+                height: 40px;
+                font-size: 0.9rem;
+            }
+            .number-picker-grid {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 4px;
+                max-width: 100%;
+            }
+            .number-picker-cell {
+                font-size: 0.75rem;
+                min-width: 30px;
+            }
+            .copy-buttons {
+                flex-direction: column;
+            }
+            .tab-container {
+                overflow-x: auto;
+                white-space: nowrap;
+                padding-bottom: 0.3rem;
+            }
+            .tab {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            .manual-form-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .prediction-tags {
+                gap: 0.3rem;
+            }
+            .prediction-tag {
+                font-size: 0.7rem;
+                padding: 0.25rem 0.45rem;
+            }
+            .prediction-tag .tag-nums {
+                font-size: 0.6rem;
+            }
+            .wave-history-row {
+                font-size: 0.7rem;
+                gap: 0.3rem;
+            }
+            .kill-tail-alert {
+                padding: 0.5rem 1rem;
+                gap: 0.5rem;
+            }
+            .kill-tail-badge {
+                font-size: 1.3rem;
+                padding: 0.2rem 0.8rem;
+            }
+            .plan-display-area {
+                padding: 0.75rem;
+            }
+            .plan-btn {
+                font-size: 0.8rem;
+                padding: 0.7rem;
+                min-width: 120px;
+            }
+            .history-filter-tab {
+                font-size: 0.7rem;
+                padding: 0.4rem 0.8rem;
+            }
+            .plan-hit-detail {
+                font-size: 0.7rem;
+                flex-wrap: wrap;
+                margin-left: 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.2rem;
+            }
+            .stat-card {
+                padding: 0.7rem;
+                font-size: 0.85rem;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.4rem;
+            }
+            .prediction-card,
+            .kill-prediction-card,
+            .wave-card {
+                min-height: 110px;
+                padding: 0.8rem;
+            }
+            .number-circle {
+                width: 34px;
+                height: 34px;
+                font-size: 0.75rem;
+            }
+            .zodiac-element {
+                font-size: 0.8rem;
+            }
+            .number-picker-cell {
+                font-size: 0.7rem;
+                min-width: 26px;
+                border-width: 2px;
+            }
+            .prediction-tags {
+                gap: 0.2rem;
+            }
+            .prediction-tag {
+                font-size: 0.65rem;
+                padding: 0.2rem 0.35rem;
+            }
+            .prediction-tag .tag-nums {
+                font-size: 0.55rem;
+            }
+            .wave-prediction-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.4rem;
+            }
+            .kill-tail-alert {
+                flex-direction: column;
+                text-align: center;
+            }
+            .plan-btn {
+                font-size: 0.7rem;
+                min-width: 100px;
+            }
+            .plan-hit-detail {
+                font-size: 0.65rem;
+                flex-direction: column;
+                gap: 0.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="storage-notice" id="storageNotice">配置已保存</div>
+
+    <div class="container">
+        <div class="control-floating-btn" id="controlToggle">⚙️ 参数调节</div>
+
+        <div class="control-panel" id="controlPanel">
+            <div class="tab-container">
+                <div class="tab active" data-tab="basic">基本参数</div>
+                <div class="tab" data-tab="number">号码预测</div>
+                <div class="tab" data-tab="wave">波色预测</div>
+                <div class="tab" data-tab="finance">财务设置</div>
+                <div class="tab" data-tab="preset">预设配置</div>
+            </div>
+            <div class="tab-content active" id="basicTab">
+                <h2>⚙️ 基本参数调节</h2>
+                <div class="slider-container"><label>生肖数量</label><input type="range" class="param-slider" id="countSlider" min="1" max="12" value="12"><span id="countValue" class="badge">12</span></div>
+                <div class="slider-container"><label>杀肖数量</label><input type="range" class="param-slider" id="killCountSlider" min="1" max="5" value="1"><span id="killCountValue" class="badge">1</span></div>
+                <div class="slider-container"><label>频率权重</label><input type="range" class="param-slider" id="frequencySlider" min="0" max="10" value="4"><span id="frequencyValue" class="badge">0.4</span></div>
+                <div class="slider-container"><label>遗漏权重</label><input type="range" class="param-slider" id="omissionSlider" min="0" max="10" value="2"><span id="omissionValue" class="badge">0.2</span></div>
+                <div class="slider-container"><label>趋势权重</label><input type="range" class="param-slider" id="trendSlider" min="0" max="10" value="4"><span id="trendValue" class="badge">0.4</span></div>
+                <div class="slider-container"><label>重肖惩罚</label><input type="range" class="param-slider" id="fivePeriodSlider" min="0" max="10" value="3"><span id="fivePeriodValue" class="badge">0.3</span></div>
+                <div class="slider-container"><label>频率惩罚</label><input type="range" class="param-slider" id="zodiacPenaltySlider" min="0" max="10" value="1"><span id="zodiacPenaltyValue" class="badge">0.1</span></div>
+                <div class="slider-container"><label>遗漏阈值</label><input type="range" class="param-slider" id="thresholdSlider" min="10" max="50" value="30"><span id="thresholdValue" class="badge">30</span></div>
+                <div class="slider-container"><label>遗漏倍率</label><input type="range" class="param-slider" id="multiplierSlider" min="1" max="100" value="20"><span id="multiplierValue" class="badge">20</span></div>
+            </div>
+            <div class="tab-content" id="numberTab">
+                <h2>🔢 号码预测参数</h2>
+                <div class="slider-container"><label>高频号码数量</label><input type="range" class="param-slider" id="frequentCountSlider" min="0" max="3" value="2"><span id="frequentCountValue" class="badge">2</span></div>
+                <div class="slider-container"><label>回弹号码数量</label><input type="range" class="param-slider" id="reboundCountSlider" min="0" max="3" value="1"><span id="reboundCountValue" class="badge">1</span></div>
+                <div class="slider-container"><label>频率权重</label><input type="range" class="param-slider" id="numberFrequencySlider" min="0" max="10" value="6"><span id="numberFrequencyValue" class="badge">0.6</span></div>
+                <div class="slider-container"><label>趋势权重</label><input type="range" class="param-slider" id="numberTrendSlider" min="0" max="10" value="4"><span id="numberTrendValue" class="badge">0.4</span></div>
+                <div class="slider-container"><label>遗漏阈值</label><input type="range" class="param-slider" id="numberOmissionThresholdSlider" min="5" max="30" value="15"><span id="numberOmissionThresholdValue" class="badge">15</span></div>
+                <div class="slider-container"><label>回弹遗漏上限</label><input type="range" class="param-slider" id="reboundOmissionMaxSlider" min="10" max="50" value="30"><span id="reboundOmissionMaxValue" class="badge">30</span></div>
+                <div class="slider-container"><label>回弹遗漏下限</label><input type="range" class="param-slider" id="reboundOmissionMinSlider" min="1" max="20" value="14"><span id="reboundOmissionMinValue" class="badge">14</span></div>
+            </div>
+            <div class="tab-content" id="waveTab">
+                <h2>🌊 波色预测参数</h2>
+                <p style="font-size:0.85rem;color:#64748b;margin-bottom:1rem;">波色预测包含两个策略：①跟风波(跟随上期波色) ②高频波(近N期高频波色，连开超阈值则排除)</p>
+                <div class="slider-container"><label>统计期数(近N期)</label><input type="range" class="param-slider" id="waveRecentSlider" min="5" max="50" value="20"><span id="waveRecentValue" class="badge">20</span></div>
+                <div class="slider-container"><label>连开排除阈值</label><input type="range" class="param-slider" id="waveConsecutiveSlider" min="2" max="8" value="3"><span id="waveConsecutiveValue" class="badge">3</span></div>
+                <p style="font-size:0.78rem;color:#94a3b8;">说明：若某波色连续开出≥阈值期数，高频波预测将排除该波色。两个波色预测不会重复。</p>
+            </div>
+            <div class="tab-content" id="financeTab">
+                <h2>💰 财务参数设置</h2>
+                <div class="finance-inputs">
+                    <div class="finance-input-group"><label>初始本金 (元)</label><input type="number" id="principal" value="10000" step="100"></div>
+                    <div class="finance-input-group"><label>单注金额 (元)</label><input type="number" id="betAmount" value="100" step="10"></div>
+                    <div class="finance-input-group"><label>赔率倍数</label><input type="number" id="odds" value="48"></div>
+                    <div class="finance-input-group"><label>倍投系数</label><input type="number" id="multiplier" value="3" step="0.5"></div>
+                    <div class="finance-input-group"><label>起始期数</label><input type="number" id="startPeriod" value="1"></div>
+                    <button id="applyFinance">应用财务参数</button>
+                </div>
+            </div>
+            <div class="tab-content" id="presetTab">
+                <h2>⚙️ 预设配置</h2>
+                <div style="margin-top:1rem;display:flex;gap:0.75rem;flex-direction:column;">
+                    <button class="api-btn" data-url="https://kk888-era5d.top/bbs/macao2026.json" data-config='{"predictionCount":9,"killCount":1,"weights.frequency":0.4,"weights.omission":0.2,"weights.trend":0.4,"fivePeriodDoublePenalty":0.3,"zodiacFrequencyPenalty":0.1,"omissionBoost.threshold":30,"omissionBoost.multiplier":20,"recentMissThreshold":10,"decayRate":0.85,"minHistory":0,"numberPrediction":{"frequentCount":2,"reboundCount":1,"frequencyWeight":0.6,"trendWeight":0.4,"omissionThreshold":15,"reboundOmissionMax":30,"reboundOmissionMin":14},"wavePrediction":{"recentPeriods":20,"consecutiveThreshold":3}}'>🇲🇴 新澳门完整配置</button>
+                    <button class="api-btn" data-url="https://kk888-era5d.top/bbs/hongkong2026.json" data-config='{"predictionCount":9,"killCount":1,"weights.frequency":0,"weights.omission":0.3,"weights.trend":0.2,"fivePeriodDoublePenalty":0.1,"zodiacFrequencyPenalty":0.4,"omissionBoost.threshold":25,"omissionBoost.multiplier":10,"recentMissThreshold":10,"decayRate":0.85,"minHistory":10,"numberPrediction":{"frequentCount":1,"reboundCount":2,"frequencyWeight":0.4,"trendWeight":0.6,"omissionThreshold":20,"reboundOmissionMax":25,"reboundOmissionMin":3},"wavePrediction":{"recentPeriods":20,"consecutiveThreshold":3}}'>🇭🇰 香港完整配置</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="header">
+            <h1>🎰 港澳六合彩智能统计预测系统</h1>
+            <div id="statistics" class="stats-grid"></div>
+        </div>
+
+        <div class="current-result">
+            <h2 style="margin-bottom:1.5rem;">📅 本期开奖结果</h2>
+            <div id="currentResult"></div>
+            <button class="manual-toggle-btn" id="manualToggleBtn">✏️ 手动录入开奖数据</button>
+            <div class="manual-entry-panel" id="manualEntryPanel">
+                <h3 style="margin-bottom:0.75rem;">📝 手动录入开奖号码</h3>
+                <p style="font-size:0.85rem;color:#64748b;margin-bottom:1rem;">点击下方数字选择，最多选7个（最后选中的为<strong style="color:#dc2626;">特码</strong>，其余为普通号码）</p>
+                <div class="selected-numbers-display" id="selectedNumbersDisplay">
+                    <span style="color:#94a3b8;">尚未选择号码</span>
+                </div>
+                <div class="number-picker-grid" id="numberPickerGrid"></div>
+                <div class="manual-form-row">
+                    <label>期号：</label>
+                    <input type="number" id="manualPeriod" placeholder="如 2025001">
+                    <label>日期：</label>
+                    <input type="date" id="manualDate">
+                </div>
+                <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+                    <button class="btn-submit-manual" id="btnSubmitManual">✅ 确认录入</button>
+                    <button class="btn-clear-manual" id="btnClearManual">🔄 清除选择</button>
+                </div>
+                <div class="manual-entry-list" id="manualEntryList">
+                    <p style="font-size:0.8rem;color:#94a3b8;">已手动录入的数据将显示在这里</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 style="margin:2rem 0 1rem;">🌊 下一期波色预测</h2>
+        <div id="currentWavePrediction" class="wave-prediction-grid"></div>
+
+        <!-- 杀尾区域：简化为“杀X尾” -->
+        <div class="kill-tail-alert" id="killTailAlert">
+            <span class="kill-tail-badge" id="killTailBadge">--</span>
+            <span class="kill-tail-info" id="killTailDetail">上期开--尾 → 本期自动杀--尾</span>
+        </div>
+
+        <h2 style="margin:2rem 0 1rem;">🔮 下一期生肖预测</h2>
+        <div id="currentPrediction" class="prediction-grid"></div>
+        <div class="copy-buttons">
+            <button id="copyZodiac" class="copy-btn">📋 复制生肖</button>
+            <button id="copyNumbers" class="copy-btn">📋 复制号码</button>
+        </div>
+
+        <!-- 方案按钮 -->
+        <div class="copy-buttons" style="margin-top:0.5rem;">
+            <button id="btnPlanOne" class="plan-btn plan-one">📋 预测九肖方案</button>
+            <button id="btnPlanTwo" class="plan-btn plan-two">📋 预测七肖方案(中七肖)</button>
+            <button id="copyPlanDisplay" class="copy-btn" style="background:#8b5cf6;">📋 复制当前方案</button>
+        </div>
+        <!-- 方案显示区域 -->
+        <div class="plan-display-area" id="planDisplayArea">
+            <div id="planDisplayContent"></div>
+        </div>
+
+        <h2 style="margin:2rem 0 1rem;">⚔️ 绝杀生肖</h2>
+        <div id="killPrediction" class="prediction-grid"></div>
+
+        <div id="monthlyToggle">📅 点击展开月度统计 ▼</div>
+        <div class="zodiac-container" id="monthlyContainer"><div id="monthlyStats" class="stats-grid"></div></div>
+
+        <div id="zodiacToggle">📊 点击展开生肖大数据 ▼</div>
+        <div class="zodiac-container" id="zodiacContainer"><div id="zodiacStatistics" class="stats-grid"></div></div>
+
+        <div style="margin-top:2rem;">
+            <h2 style="margin:2rem 0 1rem;">📜 历史预测验证记录</h2>
+            <div class="history-filter-tabs" id="historyFilterTabs">
+                <button class="history-filter-tab active-filter" data-filter="all">📜 全部记录</button>
+                <button class="history-filter-tab filter-plan-one" data-filter="planOne">📋 方案一(九肖)</button>
+                <button class="history-filter-tab filter-plan-two" data-filter="planTwo">📋 方案二(七肖)</button>
+            </div>
+            <div id="historyValidation" class="history-list"></div>
+        </div>
+        <div class="legal-notice">※ 本系统仅供技术研究用途，禁止用于违法行为</div>
+    </div>
+
+    <script>
+        const ZODIAC = {
+            '鼠': { numbers: [7, 19, 31, 43], color: '#8BC34A' },
+            '牛': { numbers: [6, 18, 30, 42], color: '#4CAF50' },
+            '虎': { numbers: [5, 17, 29, 41], color: '#cdb600' },
+            '兔': { numbers: [4, 16, 28, 40], color: '#b0b500' },
+            '龙': { numbers: [3, 15, 27, 39], color: '#FFC107' },
+            '蛇': { numbers: [2, 14, 26, 38], color: '#FF9800' },
+            '马': { numbers: [1, 13, 25, 37, 49], color: '#F44336' },
+            '羊': { numbers: [12, 24, 36, 48], color: '#E91E63' },
+            '猴': { numbers: [11, 23, 35, 47], color: '#9C27B0' },
+            '鸡': { numbers: [10, 22, 34, 46], color: '#673AB7' },
+            '狗': { numbers: [9, 21, 33, 45], color: '#3F51B5' },
+            '猪': { numbers: [8, 20, 32, 44], color: '#2196F3' }
+        };
+        const ZODIAC_ORDER = ['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪'];
+        const ELEMENT_MAP = {
+            '金': ['04', '05', '12', '13', '26', '27', '34', '35', '42', '43'],
+            '木': ['08', '09', '16', '17', '24', '25', '38', '39', '46', '47'],
+            '水': ['01', '14', '15', '22', '23', '30', '31', '44', '45'],
+            '火': ['02', '03', '10', '11', '18', '19', '32', '33', '40', '41', '48', '49'],
+            '土': ['06', '07', '20', '21', '28', '29', '36', '37']
+        };
+        const WAVE_COLORS = { '蓝': '#3b82f6', '绿': '#10b981', '红': '#ef4444' };
+        const WAVE_NAMES = ['红', '蓝', '绿'];
+        const NUMBER_TO_WAVE = {
+            '03': '蓝', '04': '蓝', '09': '蓝', '10': '蓝', '14': '蓝', '15': '蓝', '20': '蓝',
+            '25': '蓝', '26': '蓝', '31': '蓝', '36': '蓝', '37': '蓝', '41': '蓝', '42': '蓝',
+            '47': '蓝', '48': '蓝', '05': '绿', '06': '绿', '11': '绿', '16': '绿', '17': '绿',
+            '21': '绿', '22': '绿', '27': '绿', '28': '绿', '32': '绿', '33': '绿', '38': '绿',
+            '39': '绿', '43': '绿', '44': '绿', '49': '绿', '01': '红', '02': '红', '07': '红',
+            '08': '红', '12': '红', '13': '红', '18': '红', '19': '红', '23': '红', '24': '红',
+            '29': '红', '30': '红', '34': '红', '35': '红', '40': '红', '45': '红', '46': '红'
+        };
+        const KILL_TAIL_RULES = {
+            '0': '5',
+            '1': '5',
+            '2': '7',
+            '3': '6',
+            '4': '9',
+            '5': '9',
+            '6': '8',
+            '7': '4',
+            '8': '3',
+            '9': '8'
+        };
+        const CONFIG = {
+            predictionCount: 12,
+            killCount: 1,
+            weights: { frequency: 0.1, omission: 0.7, trend: 0.2 },
+            fivePeriodDoublePenalty: 0.7,
+            zodiacFrequencyPenalty: 0.5,
+            omissionBoost: { threshold: 15, multiplier: 50 },
+            recentMissThreshold: 10,
+            decayRate: 0.85,
+            minHistory: 28,
+            numberPrediction: {
+                frequentCount: 1,
+                reboundCount: 2,
+                frequencyWeight: 0.2,
+                trendWeight: 0.8,
+                omissionThreshold: 10,
+                reboundOmissionMax: 80,
+                reboundOmissionMin: 15
+            },
+            wavePrediction: {
+                recentPeriods: 20,
+                consecutiveThreshold: 3
+            }
+        };
+        const FINANCE_CONFIG = { principal: 0, betAmount: 0, odds: 0, multiplier: 0, startPeriod: 0 };
+        const ZODIAC_MAP = new Map();
+        Object.entries(ZODIAC).forEach(([animal, data]) => {
+            data.numbers.forEach(num => ZODIAC_MAP.set(num.toString().padStart(2, '0'), animal));
+        });
+
+        class LotteryPredictor {
+            constructor(history) {
+                this.history = history.sort((a, b) => a.period - b.period);
+                this.cache = new Map();
+                this.numberCache = new Map();
+                this.waveCache = new Map();
+            }
+            calculateFeatures(currentPeriod) {
+                const cacheKey = `${currentPeriod}_${this.history.length}`;
+                if (this.cache.has(cacheKey)) return this.cache.get(cacheKey);
+                const features = {};
+                const validHistory = this.history.filter(h => h.period < currentPeriod);
+                Object.keys(ZODIAC).forEach(animal => {
+                    features[animal] = { frequency: 0, lastSeen: -1, omission: currentPeriod, trend: 0,
+                        recentCount: 0 };
+                });
+                validHistory.forEach((record, index) => {
+                    const animal = record.special;
+                    const decay = Math.pow(CONFIG.decayRate, validHistory.length - index - 1);
+                    features[animal].frequency += decay;
+                    features[animal].lastSeen = Math.max(features[animal].lastSeen, record.period);
+                    if (validHistory.length - index <= 10) features[animal].recentCount++;
+                });
+                Object.entries(features).forEach(([animal, data]) => {
+                    data.omission = data.lastSeen === -1 ? currentPeriod : currentPeriod - data
+                        .lastSeen;
+                    const trendWindow = validHistory.slice(-20);
+                    data.trend = trendWindow.filter(r => r.special === animal).length;
+                });
+                this.cache.set(cacheKey, features);
+                return features;
+            }
+            calculateNumberFeatures(currentPeriod) {
+                const cacheKey = `num_${currentPeriod}_${this.history.length}`;
+                if (this.numberCache.has(cacheKey)) return this.numberCache.get(cacheKey);
+                const features = new Map();
+                const validHistory = this.history.filter(h => h.period < currentPeriod);
+                Object.values(ZODIAC).forEach(({ numbers }) => {
+                    numbers.forEach(num => {
+                        features.set(num, {
+                            count: 0,
+                            lastSeen: -1,
+                            omission: currentPeriod,
+                            trend: 0,
+                            element: this.getElement(num.toString().padStart(2, '0')),
+                            wave: NUMBER_TO_WAVE[num.toString().padStart(2, '0')] || '蓝'
+                        });
+                    });
+                });
+                validHistory.forEach((record, index) => {
+                    const numbers = [...(record.p ? record.p.split(',') : []), record.code].map(n =>
+                        parseInt(n));
+                    numbers.forEach(num => {
+                        if (!features.has(num)) return;
+                        const data = features.get(num);
+                        data.count++;
+                        data.lastSeen = Math.max(data.lastSeen, record.period);
+                        if (validHistory.length - index <= 20) data.trend++;
+                    });
+                });
+                features.forEach(data => { data.omission = data.lastSeen === -1 ? currentPeriod :
+                        currentPeriod - data.lastSeen; });
+                this.numberCache.set(cacheKey, features);
+                return features;
+            }
+            predictWaves(currentPeriod) {
+                const cacheKey = `wave_${currentPeriod}_${this.history.length}`;
+                if (this.waveCache.has(cacheKey)) return this.waveCache.get(cacheKey);
+                const validHistory = this.history.filter(h => h.period < currentPeriod);
+                const wp = CONFIG.wavePrediction;
+                let wave1 = null;
+                let wave2 = null;
+                let consecutiveCount = 0;
+                let waveFrequency = { '红': 0, '蓝': 0, '绿': 0 };
+                if (validHistory.length > 0) {
+                    const lastRecord = validHistory[validHistory.length - 1];
+                    const lastCode = lastRecord.code;
+                    wave1 = NUMBER_TO_WAVE[lastCode] || '蓝';
+                    let consecWave = wave1;
+                    for (let i = validHistory.length - 1; i >= 0; i--) {
+                        const w = NUMBER_TO_WAVE[validHistory[i].code] || '蓝';
+                        if (w === consecWave) { consecutiveCount++; } else { break; }
+                    }
+                    const recentN = Math.min(wp.recentPeriods, validHistory.length);
+                    const recentHistory = validHistory.slice(-recentN);
+                    recentHistory.forEach(r => {
+                        const w = NUMBER_TO_WAVE[r.code] || '蓝';
+                        waveFrequency[w] = (waveFrequency[w] || 0) + 1;
+                    });
+                    const excludedWaves = new Set();
+                    if (consecutiveCount >= wp.consecutiveThreshold) {
+                        excludedWaves.add(consecWave);
+                    }
+                    const sortedWaves = WAVE_NAMES.slice().sort((a, b) => (waveFrequency[b] || 0) - (
+                        waveFrequency[a] || 0));
+                    for (const w of sortedWaves) {
+                        if (!excludedWaves.has(w) && w !== wave1) {
+                            wave2 = w;
+                            break;
+                        }
+                    }
+                    if (!wave2) {
+                        for (const w of sortedWaves) {
+                            if (w !== wave1) { wave2 = w; break; }
+                        }
+                    }
+                    if (!wave2) wave2 = WAVE_NAMES.find(w => w !== wave1) || '蓝';
+                }
+                const result = { wave1, wave2, waveFrequency, consecutiveCount,
+                    consecutiveWave: consecutiveCount >= wp.consecutiveThreshold ? (validHistory.length > 0 ?
+                        NUMBER_TO_WAVE[validHistory[validHistory.length - 1].code] || '蓝' : null) : null,
+                    excludedByConsecutive: consecutiveCount >= wp.consecutiveThreshold };
+                this.waveCache.set(cacheKey, result);
+                return result;
+            }
+            predictNext(currentPeriod) {
+                const features = this.calculateFeatures(currentPeriod);
+                const w = CONFIG.weights;
+                const boost = CONFIG.omissionBoost;
+                const sortedList = Object.entries(features).map(([animal, data]) => {
+                    const realOmission = data.omission;
+                    const recentMissBoost = realOmission >= CONFIG.recentMissThreshold ? 2 : 1;
+                    let penalty = 1;
+                    if (data.recentCount >= 2) penalty = 1 - (CONFIG.fivePeriodDoublePenalty * data
+                        .recentCount);
+                    const zodiacPenalty = 1 - (CONFIG.zodiacFrequencyPenalty * (data.recentCount / 5));
+                    let score = (data.frequency ** w.frequency) * (Math.log(realOmission + 1) ** (w
+                        .omission * recentMissBoost)) * ((data.trend + 1) ** w.trend) * penalty * Math
+                        .max(zodiacPenalty, 0.1);
+                    if (realOmission >= boost.threshold) score *= boost.multiplier;
+                    return {
+                        animal,
+                        score: score,
+                        originalScore: score / (realOmission >= boost.threshold ? boost.multiplier :
+                            1),
+                        boosted: realOmission >= boost.threshold,
+                        recentMiss: realOmission >= CONFIG.recentMissThreshold,
+                        omission: realOmission
+                    };
+                }).sort((a, b) => b.score - a.score);
+                return {
+                    recommends: sortedList.slice(0, CONFIG.predictionCount),
+                    kills: sortedList.slice(-CONFIG.killCount).reverse(),
+                    sortedList: sortedList
+                };
+            }
+            predictNumbersForZodiac(animal, currentPeriod) {
+                const features = this.calculateNumberFeatures(currentPeriod);
+                let numbers = ZODIAC[animal].numbers.map(n => ({ number: n, ...features.get(n) }));
+                const numConfig = CONFIG.numberPrediction;
+                const sortedByFrequency = [...numbers].sort((a, b) => b.count - a.count);
+                const frequentNumbers = sortedByFrequency.slice(0, numConfig.frequentCount);
+                const remainingNumbers = sortedByFrequency.slice(numConfig.frequentCount);
+                const reboundCandidates = remainingNumbers.filter(n => n.omission >= numConfig
+                    .reboundOmissionMin && n.omission <= numConfig.reboundOmissionMax).sort((a, b) => {
+                    const scoreA = (a.trend * numConfig.trendWeight) + (a.count * numConfig
+                        .frequencyWeight);
+                    const scoreB = (b.trend * numConfig.trendWeight) + (b.count * numConfig
+                        .frequencyWeight);
+                    return scoreB - scoreA;
+                });
+                let reboundNumbers = reboundCandidates.slice(0, numConfig.reboundCount);
+                if (reboundNumbers.length < numConfig.reboundCount) {
+                    const needMore = numConfig.reboundCount - reboundNumbers.length;
+                    const backupNumbers = remainingNumbers.filter(n => !reboundNumbers.includes(n)).sort(
+                        (a, b) => b.trend - a.trend).slice(0, needMore);
+                    reboundNumbers = [...reboundNumbers, ...backupNumbers];
+                }
+                const result = [...frequentNumbers, ...reboundNumbers].slice(0, numConfig.frequentCount +
+                    numConfig.reboundCount).map((n, index) => ({ ...n, type: index < numConfig
+                        .frequentCount ? 'frequent' : 'rebound' }));
+                if (result.length < numConfig.frequentCount + numConfig.reboundCount) {
+                    const needMore = (numConfig.frequentCount + numConfig.reboundCount) - result.length;
+                    const allNumbers = [...numbers].filter(n => !result.some(r => r.number === n.number))
+                        .sort((a, b) => b.count - a.count).slice(0, needMore).map(n => ({ ...n,
+                            type: 'supplement' }));
+                    result.push(...allNumbers);
+                }
+                return result;
+            }
+            getElement(number) {
+                const num = number.padStart(2, '0');
+                for (const [element, numbers] of Object.entries(ELEMENT_MAP)) { if (numbers.includes(num))
+                        return element; }
+                return '未知';
+            }
+        }
+
+        class MainApp {
+            constructor() {
+                this.historyData = [];
+                this.manualData = [];
+                this.accuracyStats = { total: 0, correct: 0, killTotal: 0, killCorrect: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0, killCurrentStreak: 0, killMaxStreak: 0, killCurrentMissStreak: 0, killMaxMissStreak: 0, financeStats: { totalProfit: 0, maxPrincipal: 0, minPrincipal: Infinity, totalBets: 0, currentStreak: 0, maxStreak: 0 }, middleSeven: { total: 0, correct: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0 }, sideFive: { total: 0, correct: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0 }, waveStats: { total: 0, correct: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0, wave1Correct: 0, wave2Correct: 0, bothCorrect: 0 }, planOne: { total: 0, correct: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0 }, planTwo: { total: 0, correct: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0 } };
+                this.numberStats = { total: 0, correct: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0 };
+                this.zodiacStats = { counts: {}, omissions: {} };
+                this.monthlyStats = new Map();
+                this.controlPanelVisible = false;
+                this.apiUrl = null;
+                this.debounceTimer = null;
+                this.financeTracker = { currentPrincipal: FINANCE_CONFIG.principal, currentBetBase: FINANCE_CONFIG.betAmount, lossStreak: 0, history: [] };
+                this.activeTab = 'basic';
+                this.currentPredictionData = null;
+                this.currentWavePredictionData = null;
+                this.selectedPickNumbers = [];
+                this.currentPlanDisplay = null;
+                this.historyFilter = 'all';
+                this.allHistoryResults = [];
+                this.currentKillTail = null;
+                this.currentPlanOneData = null;
+                this.currentPlanTwoData = null;
+            }
+
+            // 核心辅助：根据波色预测动态划分主号码和防号码
+            splitNumbersByWavePrediction(numbers, wavePrediction, killTail = null) {
+                if (!wavePrediction || !wavePrediction.wave1 || !wavePrediction.wave2) {
+                    // 降级：固定主蓝绿，防红
+                    const main = [];
+                    const defend = [];
+                    let filtered = killTail ? this.applyKillTailToNumbers([...numbers], killTail) : [...numbers];
+                    filtered.forEach(num => {
+                        const numStr = num.toString().padStart(2, '0');
+                        const wave = NUMBER_TO_WAVE[numStr] || '蓝';
+                        if (wave === '红') defend.push(num);
+                        else main.push(num);
+                    });
+                    main.sort((a,b)=>a-b);
+                    defend.sort((a,b)=>a-b);
+                    return { mainNums: main, defendNums: defend, mainWaves: ['蓝','绿'], defendWave: '红' };
+                }
+                const allWaves = ['红','蓝','绿'];
+                const mainWaves = [wavePrediction.wave1, wavePrediction.wave2];
+                const defendWave = allWaves.find(w => !mainWaves.includes(w)) || '红';
+                const mainNums = [];
+                const defendNums = [];
+                let filtered = killTail ? this.applyKillTailToNumbers([...numbers], killTail) : [...numbers];
+                filtered.forEach(num => {
+                    const numStr = num.toString().padStart(2, '0');
+                    const wave = NUMBER_TO_WAVE[numStr] || '蓝';
+                    if (mainWaves.includes(wave)) mainNums.push(num);
+                    else if (wave === defendWave) defendNums.push(num);
+                });
+                mainNums.sort((a,b)=>a-b);
+                defendNums.sort((a,b)=>a-b);
+                return { mainNums, defendNums, mainWaves, defendWave };
+            }
+
+            getCurrentKillTail() {
+                if (this.historyData.length < 1) return null;
+                const lastRecord = this.historyData[this.historyData.length - 1];
+                const lastTail = lastRecord.code.slice(-1);
+                const killTail = KILL_TAIL_RULES[lastTail] || null;
+                return killTail;
+            }
+
+            applyKillTailToNumbers(numbers, killTail) {
+                if (!killTail) return numbers;
+                return numbers.filter(num => {
+                    const numStr = num.toString().padStart(2, '0');
+                    const tail = numStr.slice(-1);
+                    return tail !== killTail;
+                });
+            }
+
+            generatePlanData(sortedList, recommendsWithNumbers, wavePrediction, killTail) {
+                const planOneAnimals = sortedList.slice(0, 9).map(s => s.animal);
+                const planTwoAnimals = sortedList.slice(2, 9).map(s => s.animal);
+                const generatePlanDetail = (animals) => {
+                    let allPredNumbers = [];
+                    for (const animal of animals) {
+                        const pred = recommendsWithNumbers.find(r => r.animal === animal);
+                        if (pred && pred.numbers) {
+                            const nums = pred.numbers.map(n => n.number);
+                            allPredNumbers.push(...nums);
+                        }
+                    }
+                    const allNumbers = [...new Set(allPredNumbers)].sort((a,b)=>a-b);
+                    const { mainNums, defendNums, mainWaves, defendWave } = this.splitNumbersByWavePrediction(allNumbers, wavePrediction, killTail);
+                    return {
+                        animals,
+                        allNumbers: allNumbers,
+                        allNumbersStr: allNumbers.map(n => n.toString().padStart(2, '0')).join('.'),
+                        mainNums,
+                        mainNumsStr: mainNums.map(n => n.toString().padStart(2, '0')).join(', '),
+                        defendNums,
+                        defendNumsStr: defendNums.map(n => n.toString().padStart(2, '0')).join(', '),
+                        killTail,
+                        mainWaves,
+                        defendWave
+                    };
+                };
+                return {
+                    planOne: generatePlanDetail(planOneAnimals),
+                    planTwo: generatePlanDetail(planTwoAnimals)
+                };
+            }
+
+            formatPlanDisplayHTML(planDetail, planLabel, killTail) {
+                const killTailNote = killTail ? `<span class="plan-kill-tail-note">自动杀${killTail}尾</span>` :
+                    '<span style="color:#94a3b8;">未设置杀尾</span>';
+                const mainWavesStr = planDetail.mainWaves ? planDetail.mainWaves.join('、') : '蓝绿';
+                const defendWaveStr = planDetail.defendWave || '红';
+                const mainNumsDisplay = planDetail.mainNums.length > 0 ? planDetail.mainNumsStr : '（无）';
+                const defendNumsDisplay = planDetail.defendNums.length > 0 ? planDetail.defendNumsStr : '（无）';
+                return `
+              <h3>📋 ${planLabel}</h3>
+              <div class="plan-zodiacs">
+                <strong>生肖：</strong>
+                ${planDetail.animals.map(a => `<span style="color:${ZODIAC[a]?.color||'#333'};">${a}</span>`).join(' ')}
+              </div>
+              <div class="plan-numbers-section">
+                <strong>预测号码：</strong>
+                <span style="font-size:0.85rem;word-break:break-all;">${planDetail.allNumbersStr}</span>
+              </div>
+              <div class="plan-numbers-section">
+                <strong>波色：</strong>
+                <span style="color:#2563eb;font-weight:700;">主${mainWavesStr}波</span>
+                <span style="color:#dc2626;font-weight:700;"> 防${defendWaveStr}波</span>
+                ${killTailNote}
+              </div>
+              <div class="plan-numbers-section" style="background:#eff6ff;border:1px solid #bfdbfe;">
+                <strong style="color:#2563eb;">主号码（${mainWavesStr}波）：</strong>
+                <span class="plan-numbers-main">${mainNumsDisplay}</span>
+                ${killTail ? `<div style="font-size:0.75rem;color:#64748b;margin-top:0.3rem;">（已自动过滤杀${killTail}尾号码）</div>` : ''}
+              </div>
+              <div class="plan-numbers-section" style="background:#fef2f2;border:1px solid #fecaca;">
+                <strong style="color:#dc2626;">防号码（${defendWaveStr}波）：</strong>
+                <span class="plan-numbers-defend">${defendNumsDisplay}</span>
+                ${killTail ? `<div style="font-size:0.75rem;color:#64748b;margin-top:0.3rem;">（已自动过滤杀${killTail}尾号码）</div>` : ''}
+              </div>
+            `;
+            }
+
+            buildPlanCopyText(planType) {
+                if (!this.currentPredictionData) return "无预测数据";
+                let animals = [];
+                if (planType === 'planOne') {
+                    if (!this.currentPlanOneData) return "方案一数据不存在";
+                    animals = this.currentPlanOneData.animals;
+                } else if (planType === 'planTwo') {
+                    if (!this.currentPlanTwoData) return "方案二数据不存在";
+                    animals = this.currentPlanTwoData.animals;
+                } else {
+                    return "未知方案";
+                }
+                if (!animals.length) return "无生肖数据";
+                const recommends = this.currentPredictionData.recommends;
+                const allNumbersSet = new Set();
+                for (const animal of animals) {
+                    const pred = recommends.find(r => r.animal === animal);
+                    if (pred && pred.numbers) {
+                        pred.numbers.forEach(item => allNumbersSet.add(item.number));
+                    }
+                }
+                const allNumbers = Array.from(allNumbersSet).sort((a,b)=>a-b);
+                const allNumbersStr = allNumbers.map(n => n.toString().padStart(2, '0')).join('.');
+                const killTail = this.getCurrentKillTail();
+                const wavePred = this.currentWavePredictionData;
+                const { mainNums, defendNums, mainWaves, defendWave } = this.splitNumbersByWavePrediction(allNumbers, wavePred, killTail);
+                const mainStr = mainNums.length ? mainNums.map(n => n.toString().padStart(2,'0')).join(', ') : '无';
+                const defendStr = defendNums.length ? defendNums.map(n => n.toString().padStart(2,'0')).join(', ') : '无';
+                let text = `${animals.join(' ')}\n${allNumbersStr}\n主${mainWaves.join('、')}波 防${defendWave}波\n`;
+                if (killTail) text += `杀${killTail}尾\n`;
+                text += `主 ${mainStr}\n防 ${defendStr}`;
+                return text;
+            }
+
+            setupPlanButtons() {
+                const btnPlanOne = document.getElementById('btnPlanOne');
+                const btnPlanTwo = document.getElementById('btnPlanTwo');
+                const planDisplayArea = document.getElementById('planDisplayArea');
+                const planDisplayContent = document.getElementById('planDisplayContent');
+                const copyPlanBtn = document.getElementById('copyPlanDisplay');
+
+                const togglePlan = (planType, planData, planLabel) => {
+                    if (!planData) return;
+                    const isExpanded = planDisplayArea.classList.contains('expanded');
+                    if (isExpanded && this.currentPlanDisplay === planType) {
+                        planDisplayArea.classList.remove('expanded');
+                        this.currentPlanDisplay = null;
+                        btnPlanOne.classList.remove('active-plan');
+                        btnPlanTwo.classList.remove('active-plan');
+                    } else {
+                        const killTail = this.getCurrentKillTail();
+                        const wavePred = this.currentWavePredictionData;
+                        const planDetail = this.regeneratePlanDetailForDisplay(planData.animals, killTail, wavePred);
+                        const html = this.formatPlanDisplayHTML(planDetail, planLabel, killTail);
+                        planDisplayContent.innerHTML = html;
+                        planDisplayArea.classList.add('expanded');
+                        this.currentPlanDisplay = planType;
+                        btnPlanOne.classList.remove('active-plan');
+                        btnPlanTwo.classList.remove('active-plan');
+                        if (planType === 'planOne') btnPlanOne.classList.add('active-plan');
+                        else btnPlanTwo.classList.add('active-plan');
+                    }
+                };
+
+                btnPlanOne.addEventListener('click', () => {
+                    if (!this.currentPlanOneData && this.currentPredictionData && this.historyData.length >= CONFIG.minHistory) {
+                        this.refreshPlanData();
+                    }
+                    if (this.currentPlanOneData) {
+                        togglePlan('planOne', this.currentPlanOneData, '预测九肖方案（前9个生肖）');
+                    }
+                });
+
+                btnPlanTwo.addEventListener('click', () => {
+                    if (!this.currentPlanTwoData && this.currentPredictionData && this.historyData.length >= CONFIG.minHistory) {
+                        this.refreshPlanData();
+                    }
+                    if (this.currentPlanTwoData) {
+                        togglePlan('planTwo', this.currentPlanTwoData, '预测七肖方案（第3-9个生肖·中七肖）');
+                    }
+                });
+
+                copyPlanBtn.addEventListener('click', () => {
+                    if (planDisplayArea.classList.contains('expanded') && this.currentPlanDisplay) {
+                        const copyText = this.buildPlanCopyText(this.currentPlanDisplay);
+                        if (copyText && !copyText.startsWith("无") && !copyText.startsWith("方案")) {
+                            this.copyToClipboard(copyText, 'copyPlanDisplay');
+                        } else {
+                            alert("无法生成方案文本，请确保数据完整");
+                        }
+                    } else {
+                        alert("请先点击「预测九肖方案」或「预测七肖方案」展开方案");
+                    }
+                });
+            }
+
+            regeneratePlanDetailForDisplay(animals, killTail, wavePred) {
+                if (!this.currentPredictionData) return { animals, allNumbers: [], allNumbersStr: '', mainNums: [], mainNumsStr: '', defendNums: [], defendNumsStr: '', killTail, mainWaves: ['蓝','绿'], defendWave: '红' };
+                const recommendsWithNumbers = this.currentPredictionData.recommends;
+                const allPredNumbers = [];
+                for (const animal of animals) {
+                    const pred = recommendsWithNumbers.find(r => r.animal === animal);
+                    if (pred && pred.numbers) {
+                        const nums = pred.numbers.map(n => n.number);
+                        allPredNumbers.push(...nums);
+                    }
+                }
+                const allNumbers = [...new Set(allPredNumbers)].sort((a,b)=>a-b);
+                const { mainNums, defendNums, mainWaves, defendWave } = this.splitNumbersByWavePrediction(allNumbers, wavePred, killTail);
+                return {
+                    animals,
+                    allNumbers: allNumbers,
+                    allNumbersStr: allNumbers.map(n => n.toString().padStart(2, '0')).join('.'),
+                    mainNums,
+                    mainNumsStr: mainNums.map(n => n.toString().padStart(2, '0')).join(', '),
+                    defendNums,
+                    defendNumsStr: defendNums.map(n => n.toString().padStart(2, '0')).join(', '),
+                    killTail,
+                    mainWaves,
+                    defendWave
+                };
+            }
+
+            refreshPlanData() {
+                if (!this.currentPredictionData || this.historyData.length < CONFIG.minHistory) return;
+                const sortedList = this.currentPredictionData.sortedList;
+                const recommendsWithNumbers = this.currentPredictionData.recommends;
+                const killTail = this.getCurrentKillTail();
+                const wavePred = this.currentWavePredictionData;
+                const planData = this.generatePlanData(sortedList, recommendsWithNumbers, wavePred, killTail);
+                this.currentPlanOneData = planData.planOne;
+                this.currentPlanTwoData = planData.planTwo;
+            }
+
+            setupHistoryFilter() {
+                document.getElementById('historyFilterTabs').addEventListener('click', (e) => {
+                    const tab = e.target.closest('.history-filter-tab');
+                    if (!tab) return;
+                    document.querySelectorAll('.history-filter-tab').forEach(t => t.classList.remove('active-filter'));
+                    tab.classList.add('active-filter');
+                    this.historyFilter = tab.dataset.filter;
+                    this.renderHistoryWithFilter();
+                });
+            }
+
+            renderHistoryWithFilter() {
+                const container = document.getElementById('historyValidation');
+                let results = this.allHistoryResults;
+                if (this.historyFilter === 'planOne') {
+                    results = results.filter(r => r.planOneHit !== undefined);
+                } else if (this.historyFilter === 'planTwo') {
+                    results = results.filter(r => r.planTwoHit !== undefined);
+                }
+                container.innerHTML = [...results].reverse().map(r => this.formatHistoryRow(r)).join('');
+            }
+
+            generateDetailedPlanValidationHTML(record, planType) {
+                const isPlanOne = planType === 'planOne';
+                const animals = isPlanOne ? record.planOneAnimals : record.planTwoAnimals;
+                const schemeHit = isPlanOne ? record.planOneHit : record.planTwoHit;
+                const killTail = record.killTail;
+                const specialCode = record.specialNumber;
+                const specialNum = parseInt(specialCode);
+                const specialWave = NUMBER_TO_WAVE[specialCode] || '蓝';
+                if (!animals || animals.length === 0) return '<div>无方案数据</div>';
+                const winningNumbers = record.winningNumbers;
+                let winningHtml = '';
+                if (winningNumbers.length <= 1) {
+                    winningHtml = this.renderSingleNumber(winningNumbers[0]);
+                } else {
+                    const special = winningNumbers[winningNumbers.length - 1];
+                    const normal = winningNumbers.slice(0, -1);
+                    winningHtml = `<div class="number-combination"><div class="number-grid">${normal.map(n=>this.renderSingleNumber(n)).join('')}</div><div class="plus-between">+</div><div class="number-grid">${this.renderSingleNumber(special)}</div></div>`;
+                }
+                const recommends = record.recommends;
+                const allNumbersSet = new Set();
+                for (const animal of animals) {
+                    const pred = recommends.find(r => r.animal === animal);
+                    if (pred && pred.numbers) {
+                        pred.numbers.forEach(item => allNumbersSet.add(item.number));
+                    }
+                }
+                const allNumbers = Array.from(allNumbersSet).sort((a,b)=>a-b);
+                const allNumbersStr = allNumbers.map(n => n.toString().padStart(2, '0')).join('.');
+                const numberHit = allNumbers.includes(specialNum);
+                const wavePred = record.wavePrediction;
+                let wavePredHtml = '';
+                let mainWaves = [], defendWave = null;
+                if (wavePred && wavePred.wave1 && wavePred.wave2) {
+                    mainWaves = [wavePred.wave1, wavePred.wave2];
+                    const allWaves = ['红','蓝','绿'];
+                    defendWave = allWaves.find(w => !mainWaves.includes(w)) || null;
+                    const w1Cls = wavePred.wave1 === '红' ? 'red' : wavePred.wave1 === '蓝' ? 'blue' : 'green';
+                    const w2Cls = wavePred.wave2 === '红' ? 'red' : wavePred.wave2 === '蓝' ? 'blue' : 'green';
+                    wavePredHtml = `<div style="margin:0.5rem 0;">
+                        <span class="wave-prediction-badge wave-${w1Cls}">跟风:${wavePred.wave1}波</span>
+                        <span class="wave-prediction-badge wave-${w2Cls}">高频:${wavePred.wave2}波</span>
+                        ${wavePred.excludedByConsecutive ? `<span style="font-size:0.7rem;color:#f59e0b;">(连开${wavePred.consecutiveCount}期已排除${wavePred.consecutiveWave}波)</span>` : ''}
+                    </div>`;
+                } else {
+                    wavePredHtml = '<div>波色预测数据不足</div>';
+                    mainWaves = ['蓝','绿'];
+                    defendWave = '红';
+                }
+                const waveHit = mainWaves.includes(specialWave);
+                let tailCorrect = true;
+                if (killTail) {
+                    const specialTail = specialCode.slice(-1);
+                    tailCorrect = specialTail !== killTail;
+                }
+                const { mainNums, defendNums } = this.splitNumbersByWavePrediction(allNumbers, wavePred, killTail);
+                const mainHit = mainNums.includes(specialNum);
+                const defendHit = defendNums.includes(specialNum);
+                const cardClass = isPlanOne ? 'plan-one-card' : 'plan-two-card';
+                const hitText = schemeHit ? '✅ 生肖命中' : '❌ 生肖未中';
+                return `
+                    <div class="plan-validation-card ${cardClass}">
+                        <div class="plan-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                            <span class="plan-zodiac-list" style="font-weight:600;">${animals.join(' ')}</span>
+                            <span class="plan-hit-result" style="font-weight:700;">${hitText}</span>
+                        </div>
+                        <div><strong>开奖号码：</strong>${winningHtml}</div>
+                        <div style="margin-top:0.5rem;"><strong>预测号码：</strong> ${allNumbersStr}</div>
+                        <div><strong>波色策略：</strong>${wavePredHtml}</div>
+                        <div><strong>杀尾：</strong>${killTail ? `自动杀${killTail}尾` : '无'}</div>
+                        <div><strong>主号码（${mainWaves.join('、')}波）：</strong> ${mainNums.map(n => n.toString().padStart(2,'0')).join(', ') || '无'}</div>
+                        <div><strong>防号码（${defendWave}波）：</strong> ${defendNums.map(n => n.toString().padStart(2,'0')).join(', ') || '无'}</div>
+                        <div class="validation-list" style="margin-top:0.75rem;">
+                            <div class="validation-item">预测号码命中： <span class="validation-result ${numberHit ? 'hit' : 'miss'}">${numberHit ? '✅' : '❌'}</span></div>
+                            <div class="validation-item">波色命中： <span class="validation-result ${waveHit ? 'hit' : 'miss'}">${waveHit ? '✅' : '❌'}</span></div>
+                            <div class="validation-item">杀尾正确： <span class="validation-result ${tailCorrect ? 'hit' : 'miss'}">${tailCorrect ? '✅' : '❌'}</span></div>
+                            <div class="validation-item">主号码命中： <span class="validation-result ${mainHit ? 'hit' : 'miss'}">${mainHit ? '✅' : '❌'}</span></div>
+                            <div class="validation-item">防号码命中： <span class="validation-result ${defendHit ? 'hit' : 'miss'}">${defendHit ? '✅' : '❌'}</span></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            renderSingleNumber(n) {
+                const num = n.toString().padStart(2, '0');
+                const zodiac = ZODIAC_MAP.get(num) || '未知';
+                const element = this.getElement(num);
+                const waveColor = WAVE_COLORS[NUMBER_TO_WAVE[num]] || '#ccc';
+                return `<div class="number-item"><div class="number-circle" style="background:${waveColor}">${num}</div><div class="zodiac-element"><span>${zodiac}</span><span style="opacity:0.5">/</span><span>${element}</span></div></div>`;
+            }
+
+            getElement(number) {
+                const num = number.padStart(2, '0');
+                for (const [el, nums] of Object.entries(ELEMENT_MAP)) { if (nums.includes(num)) return el; }
+                return '未知';
+            }
+
+            loadManualData() {
+                try {
+                    const saved = localStorage.getItem('manualLotteryEntries');
+                    this.manualData = saved ? JSON.parse(saved) : [];
+                } catch (e) { this.manualData = []; }
+            }
+            saveManualData() {
+                localStorage.setItem('manualLotteryEntries', JSON.stringify(this.manualData));
+                this.showStorageNotice();
+            }
+            mergeAllData() {
+                const apiData = [...this.historyData];
+                const merged = [...apiData];
+                this.manualData.forEach(manual => {
+                    const idx = merged.findIndex(h => h.period === manual.period);
+                    if (idx >= 0) { merged[idx] = { ...manual, manual: true }; } else { merged.push({ ...manual, manual: true }); }
+                });
+                merged.sort((a, b) => a.period - b.period);
+                this.historyData = merged;
+            }
+
+            setupManualEntry() {
+                const toggleBtn = document.getElementById('manualToggleBtn');
+                const panel = document.getElementById('manualEntryPanel');
+                const pickerGrid = document.getElementById('numberPickerGrid');
+                const display = document.getElementById('selectedNumbersDisplay');
+                const btnSubmit = document.getElementById('btnSubmitManual');
+                const btnClear = document.getElementById('btnClearManual');
+                const periodInput = document.getElementById('manualPeriod');
+                const dateInput = document.getElementById('manualDate');
+                const entryList = document.getElementById('manualEntryList');
+                this.selectedPickNumbers = [];
+                this.renderNumberPicker();
+                this.renderManualEntryList();
+                this.updateSelectedDisplay();
+                toggleBtn.addEventListener('click', () => {
+                    const isExpanded = panel.classList.contains('expanded');
+                    panel.classList.toggle('expanded');
+                    toggleBtn.classList.toggle('active-manual');
+                    toggleBtn.innerHTML = isExpanded ? '✏️ 手动录入开奖数据' : '✏️ 收起录入面板';
+                    if (!isExpanded) {
+                        if (this.historyData.length > 0) {
+                            const last = this.historyData[this.historyData.length - 1];
+                            periodInput.value = last.period + 1;
+                            dateInput.value = this.getNextDate(last.date);
+                        } else {
+                            periodInput.value = '';
+                            dateInput.value = new Date().toISOString().split('T')[0];
+                        }
+                    }
+                });
+                btnClear.addEventListener('click', () => {
+                    this.selectedPickNumbers = [];
+                    this.renderNumberPicker();
+                    this.updateSelectedDisplay();
+                });
+                btnSubmit.addEventListener('click', () => {
+                    const period = parseInt(periodInput.value);
+                    const date = dateInput.value;
+                    if (!period || !date) { alert('请填写期号和日期'); return; }
+                    if (this.selectedPickNumbers.length === 0) { alert('请至少选择一个特码号码'); return; }
+                    const specialNum = this.selectedPickNumbers[this.selectedPickNumbers.length - 1];
+                    const normalNums = this.selectedPickNumbers.slice(0, -1);
+                    const specialStr = specialNum.toString().padStart(2, '0');
+                    const specialAnimal = ZODIAC_MAP.get(specialStr) || '未知';
+                    const pStr = normalNums.length > 0 ? normalNums.map(n => n.toString().padStart(2, '0')).join(',') : null;
+                    const entry = { period, date, special: specialAnimal, code: specialStr, p: pStr, manual: true };
+                    const existIdx = this.manualData.findIndex(m => m.period === period);
+                    if (existIdx >= 0) { this.manualData[existIdx] = entry; } else { this.manualData.push(entry); }
+                    this.manualData.sort((a, b) => a.period - b.period);
+                    this.saveManualData();
+                    this.selectedPickNumbers = [];
+                    this.renderNumberPicker();
+                    this.updateSelectedDisplay();
+                    this.renderManualEntryList();
+                    this.mergeAllData();
+                    this.refreshAll();
+                    alert(`✅ 第${period}期开奖数据已录入！`);
+                });
+                pickerGrid.addEventListener('click', (e) => {
+                    const cell = e.target.closest('.number-picker-cell');
+                    if (!cell) return;
+                    const num = parseInt(cell.dataset.num);
+                    const idx = this.selectedPickNumbers.indexOf(num);
+                    if (idx >= 0) { this.selectedPickNumbers.splice(idx, 1); } else { if (this.selectedPickNumbers.length >= 7) { alert('最多选择7个号码（6个普通号码 + 1个特码）'); return; }
+                        this.selectedPickNumbers.push(num); }
+                    this.renderNumberPicker();
+                    this.updateSelectedDisplay();
+                });
+                document.getElementById('manualEntryList').addEventListener('click', (e) => {
+                    const delBtn = e.target.closest('.btn-delete-manual');
+                    if (!delBtn) return;
+                    const period = parseInt(delBtn.dataset.period);
+                    this.manualData = this.manualData.filter(m => m.period !== period);
+                    this.saveManualData();
+                    this.renderManualEntryList();
+                    this.mergeAllData();
+                    this.refreshAll();
+                });
+                if (this.historyData.length > 0) {
+                    const last = this.historyData[this.historyData.length - 1];
+                    periodInput.value = last.period + 1;
+                    dateInput.value = this.getNextDate(last.date);
+                } else { dateInput.value = new Date().toISOString().split('T')[0]; }
+            }
+
+            renderNumberPicker() {
+                const grid = document.getElementById('numberPickerGrid');
+                let html = '';
+                for (let i = 1; i <= 49; i++) {
+                    const numStr = i.toString().padStart(2, '0');
+                    const wave = NUMBER_TO_WAVE[numStr] || '蓝';
+                    const bgColor = WAVE_COLORS[wave] || '#3b82f6';
+                    const pickIdx = this.selectedPickNumbers.indexOf(i);
+                    const isSelected = pickIdx >= 0;
+                    const isSpecial = isSelected && pickIdx === this.selectedPickNumbers.length - 1;
+                    let cls = 'number-picker-cell';
+                    if (isSelected) cls += ' selected-pick';
+                    if (isSpecial) cls += ' special-pick';
+                    html += `<div class="${cls}" data-num="${i}" style="background:${bgColor};" title="号码${i} - ${wave}波">${i}${isSelected ? `<span class="pick-order-badge">${pickIdx+1}</span>` : ''}</div>`;
+                }
+                grid.innerHTML = html;
+            }
+
+            updateSelectedDisplay() {
+                const display = document.getElementById('selectedNumbersDisplay');
+                if (this.selectedPickNumbers.length === 0) {
+                    display.innerHTML = '<span style="color:#94a3b8;">尚未选择号码（点击下方数字网格选择）</span>';
+                    return;
+                }
+                let html = '';
+                this.selectedPickNumbers.forEach((num, idx) => {
+                    const numStr = num.toString().padStart(2, '0');
+                    const isLast = idx === this.selectedPickNumbers.length - 1;
+                    const tagCls = isLast ? 'selected-tag special-tag' : 'selected-tag normal-tag';
+                    const label = isLast ? `🔴特码 ${numStr}` : `🔵${numStr}`;
+                    html += `<span class="${tagCls}">${label}${isLast?'':','}</span>`;
+                });
+                display.innerHTML = html;
+            }
+
+            renderManualEntryList() {
+                const listEl = document.getElementById('manualEntryList');
+                if (this.manualData.length === 0) {
+                    listEl.innerHTML = '<p style="font-size:0.8rem;color:#94a3b8;">暂无手动录入数据</p>';
+                    return;
+                }
+                listEl.innerHTML = this.manualData.map(m => {
+                    const normalNums = m.p ? m.p.split(',').join(' ') : '无';
+                    return `<div class="manual-entry-item">
+                <span>📅 第${m.period}期 | ${m.date} | 号码: ${normalNums} + <strong style="color:#dc2626;">${m.code}</strong> (${m.special})</span>
+                <button class="btn-delete-manual" data-period="${m.period}">删除</button>
+              </div>`;
+                }).join('');
+            }
+
+            setupCopyButtons() {
+                document.getElementById('copyZodiac').addEventListener('click', () => {
+                    const selectedZodiacs = Array.from(document.querySelectorAll('.prediction-card.selected')).map(card => {
+                        const zodiacText = card.querySelector('.zodiac-tag span').textContent.trim();
+                        return zodiacText.replace(/[^\u4e00-\u9fa5]/g, '');
+                    });
+                    let zodiacsToCopy;
+                    if (selectedZodiacs.length > 0) { zodiacsToCopy = selectedZodiacs.join(''); } else { if (!this.currentPredictionData) return;
+                        zodiacsToCopy = this.currentPredictionData.recommends.map(r => r.animal).join(''); }
+                    this.copyToClipboard(zodiacsToCopy, 'copyZodiac');
+                });
+                document.getElementById('copyNumbers').addEventListener('click', () => {
+                    const selectedCards = Array.from(document.querySelectorAll('.prediction-card.selected'));
+                    let numbersToCopy;
+                    if (selectedCards.length > 0) {
+                        numbersToCopy = selectedCards.flatMap(card => {
+                            const zodiacText = card.querySelector('.zodiac-tag span').textContent.trim();
+                            const zodiacName = zodiacText.replace(/[^\u4e00-\u9fa5]/g, '');
+                            const prediction = this.currentPredictionData.recommends.find(r => r.animal === zodiacName);
+                            return prediction ? prediction.numbers.map(n => n.number.toString().padStart(2, '0')) : [];
+                        }).sort((a, b) => parseInt(a) - parseInt(b)).join('.');
+                    } else {
+                        if (!this.currentPredictionData) return;
+                        numbersToCopy = this.currentPredictionData.recommends.flatMap(r => r.numbers.map(n => n.number.toString().padStart(2, '0'))).sort((a, b) => parseInt(a) - parseInt(b)).join('.');
+                    }
+                    this.copyToClipboard(numbersToCopy, 'copyNumbers');
+                });
+                document.addEventListener('click', (e) => {
+                    const zodiacCard = e.target.closest('.prediction-card, .kill-prediction-card');
+                    if (zodiacCard) { zodiacCard.classList.toggle('selected'); e.stopPropagation(); }
+                    const waveCard = e.target.closest('.wave-card');
+                    if (waveCard) { waveCard.classList.toggle('selected'); e.stopPropagation(); }
+                });
+            }
+            copyToClipboard(text, buttonId) {
+                navigator.clipboard.writeText(text).then(() => this.showCopySuccess(buttonId)).catch(() => {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    this.showCopySuccess(buttonId);
+                });
+            }
+            showCopySuccess(buttonId) {
+                const btn = document.getElementById(buttonId);
+                const originalText = btn.textContent;
+                btn.textContent = '✓ 复制成功';
+                btn.style.backgroundColor = '#10b981';
+                btn.style.color = 'white';
+                setTimeout(() => { btn.textContent = originalText; btn.style.backgroundColor = ''; btn.style.color = ''; }, 2000);
+            }
+            showLoading() {
+                const overlay = document.createElement('div');
+                overlay.className = 'loading-overlay';
+                overlay.innerHTML = `<div class="loader"><svg class="animate-spin" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M12 1a11 11 0 1 0 11 11A11 11 0 0 0 12 1zm0 19a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" opacity="0.3"/><path fill="currentColor" d="M12 4a8 8 0 0 1 7.89 6.7 1.53 1.53 0 0 0 1.49 1.3 1.5 1.5 0 0 0 1.48-1.75 11 11 0 0 0-21.72 0A1.5 1.5 0 0 0 2.62 12a1.53 1.53 0 0 0 1.49-1.3A8 8 0 0 1 12 4z"/></svg><div style="margin-top:1rem">数据加载中...</div></div>`;
+                document.body.appendChild(overlay);
+            }
+            hideLoading() { const overlay = document.querySelector('.loading-overlay'); if (overlay) overlay.remove(); }
+            loadFinanceConfig() {
+                const saved = localStorage.getItem('financeConfig');
+                if (saved) {
+                    try {
+                        const c = JSON.parse(saved);
+                        FINANCE_CONFIG.principal = c.principal;
+                        FINANCE_CONFIG.betAmount = c.betAmount;
+                        FINANCE_CONFIG.odds = c.odds;
+                        FINANCE_CONFIG.multiplier = c.multiplier;
+                        FINANCE_CONFIG.startPeriod = c.startPeriod;
+                        document.getElementById('principal').value = c.principal;
+                        document.getElementById('betAmount').value = c.betAmount;
+                        document.getElementById('odds').value = c.odds;
+                        document.getElementById('multiplier').value = c.multiplier;
+                        document.getElementById('startPeriod').value = c.startPeriod;
+                    } catch (e) {}
+                }
+            }
+            saveFinanceConfig() { localStorage.setItem('financeConfig', JSON.stringify(FINANCE_CONFIG)); this.showStorageNotice(); }
+            showStorageNotice() { const n = document.getElementById('storageNotice'); n.classList.add('show'); setTimeout(() => n.classList.remove('show'), 2000); }
+
+            async loadData() {
+                try {
+                    const resp = await fetch(this.apiUrl || 'https://kk888-era5d.top/bbs/macao2026.json', { headers: { 'Cache-Control': 'no-cache' } });
+                    if (!resp.ok) throw new Error('网络响应异常');
+                    const data = await resp.json();
+                    this.historyData = Object.values(data).map(item => ({
+                        period: parseInt(item.issue),
+                        date: item.date,
+                        special: ZODIAC_MAP.get(item.t.padStart(2, '0')) || '未知',
+                        code: item.t.padStart(2, '0'),
+                        p: item.p ? item.p.split(',').map(n => n.padStart(2, '0')).join(',') : null,
+                        manual: false
+                    })).sort((a, b) => a.period - b.period);
+                } catch (err) { console.error('数据加载失败:', err); this.historyData = []; }
+                this.financeTracker = { currentPrincipal: FINANCE_CONFIG.principal, currentBetBase: FINANCE_CONFIG.betAmount, lossStreak: 0, history: [] };
+            }
+
+            renderNumbers(numbers, type) {
+                return numbers.split(',').map(num => {
+                    const n = num.padStart(2, '0');
+                    const element = this.getElement(n);
+                    const zodiac = ZODIAC_MAP.get(n) || '未知';
+                    const waveColor = WAVE_COLORS[NUMBER_TO_WAVE[n]] || '#ccc';
+                    return `<div class="number-item"><div class="number-circle" style="background:${waveColor}">${n}</div><div class="zodiac-element">${zodiac}/${element}</div></div>`;
+                }).join('');
+            }
+
+            renderCurrentResult() {
+                if (this.historyData.length === 0) { document.getElementById('currentResult').innerHTML = '<p style="color:#94a3b8;">暂无开奖数据，请手动录入或等待API更新</p>'; return; }
+                const latest = this.historyData[this.historyData.length - 1];
+                const manualBadge = latest.manual ? ' <span class="manual-badge">📝手动录入</span>' : '';
+                const latestWave = NUMBER_TO_WAVE[latest.code] || '蓝';
+                const html = `
+              <div class="result-info">
+                <div><div style="color:#64748b;">期号</div><div>${latest.period}${manualBadge}</div></div>
+                <div><div style="color:#64748b;">日期</div><div>${latest.date}</div></div>
+                <div><div style="color:#64748b;">特码生肖</div><div style="color:${ZODIAC[latest.special]?.color||'#333'};font-weight:bold;">${latest.special}</div></div>
+                <div><div style="color:#64748b;">特码波色</div><div style="font-weight:bold;"><span class="wave-mini-card wave-${latestWave === '红' ? 'red' : latestWave === '蓝' ? 'blue' : 'green'}">${latestWave}波</span></div></div>
+                <div><div style="color:#64748b;">特码尾数</div><div style="font-weight:bold;color:#dc2626;">${latest.code.slice(-1)}尾</div></div>
+              </div>
+              ${latest.p?`<div style="margin-top:1.5rem;"><h3>开奖号码</h3><div class="number-combination"><div class="number-grid">${this.renderNumbers(latest.p,'p')}</div><div class="plus-between">+</div><div class="number-grid">${this.renderNumbers(latest.code,'t')}</div></div></div>`:`<div style="margin-top:1rem;"><strong>特码：</strong>${latest.code} (${latest.special}) - <span class="wave-mini-card wave-${latestWave === '红' ? 'red' : latestWave === '蓝' ? 'blue' : 'green'}">${latestWave}波</span></div>`}
+            `;
+                document.getElementById('currentResult').innerHTML = html;
+            }
+
+            calculateZodiacStats() {
+                const counts = {};
+                const lastAppearance = {};
+                const maxPeriod = this.historyData.length > 0 ? Math.max(...this.historyData.map(h => h.period)) : 0;
+                Object.keys(ZODIAC).forEach(a => { counts[a] = 0; lastAppearance[a] = -1; });
+                this.historyData.forEach(r => { counts[r.special]++; lastAppearance[r.special] = Math.max(lastAppearance[r.special], r.period); });
+                const omissions = {};
+                Object.keys(lastAppearance).forEach(a => { omissions[a] = lastAppearance[a] === -1 ? maxPeriod : maxPeriod - lastAppearance[a]; });
+                this.zodiacStats = { counts, omissions };
+            }
+
+            setupTabs() {
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                        tab.classList.add('active');
+                        const targetId = tab.dataset.tab + 'Tab';
+                        const target = document.getElementById(targetId);
+                        if (target) target.classList.add('active');
+                    });
+                });
+            }
+            setupSliders() {
+                const createDebounced = (fn) => () => { clearTimeout(this.debounceTimer); this.debounceTimer = setTimeout(fn, 300); };
+                const basicMap = [
+                    { id: 'countSlider', config: 'predictionCount', fmt: v => parseInt(v) },
+                    { id: 'killCountSlider', config: 'killCount', fmt: v => parseInt(v) },
+                    { id: 'frequencySlider', config: 'weights.frequency', fmt: v => v / 10 },
+                    { id: 'omissionSlider', config: 'weights.omission', fmt: v => v / 10 },
+                    { id: 'trendSlider', config: 'weights.trend', fmt: v => v / 10 },
+                    { id: 'fivePeriodSlider', config: 'fivePeriodDoublePenalty', fmt: v => v / 10 },
+                    { id: 'zodiacPenaltySlider', config: 'zodiacFrequencyPenalty', fmt: v => v / 10 },
+                    { id: 'thresholdSlider', config: 'omissionBoost.threshold', fmt: v => parseInt(v) },
+                    { id: 'multiplierSlider', config: 'omissionBoost.multiplier', fmt: v => parseInt(v) },
+                ];
+                basicMap.forEach(({ id, config, fmt }) => {
+                    const slider = document.getElementById(id);
+                    const display = document.getElementById(id.replace('Slider', 'Value'));
+                    if (!slider || !display) return;
+                    slider.addEventListener('input', createDebounced(() => {
+                        const val = fmt(slider.value);
+                        this.updateConfig(config, val);
+                        display.textContent = typeof val === 'number' ? val.toFixed(val % 1 === 0 ? 0 : 1) : val;
+                        this.debouncedRefresh();
+                    }));
+                });
+                const numMap = [
+                    { id: 'frequentCountSlider', config: 'numberPrediction.frequentCount', fmt: v => parseInt(v) },
+                    { id: 'reboundCountSlider', config: 'numberPrediction.reboundCount', fmt: v => parseInt(v) },
+                    { id: 'numberFrequencySlider', config: 'numberPrediction.frequencyWeight', fmt: v => v / 10 },
+                    { id: 'numberTrendSlider', config: 'numberPrediction.trendWeight', fmt: v => v / 10 },
+                    { id: 'numberOmissionThresholdSlider', config: 'numberPrediction.omissionThreshold', fmt: v => parseInt(v) },
+                    { id: 'reboundOmissionMaxSlider', config: 'numberPrediction.reboundOmissionMax', fmt: v => parseInt(v) },
+                    { id: 'reboundOmissionMinSlider', config: 'numberPrediction.reboundOmissionMin', fmt: v => parseInt(v) },
+                ];
+                numMap.forEach(({ id, config, fmt }) => {
+                    const slider = document.getElementById(id);
+                    const display = document.getElementById(id.replace('Slider', 'Value'));
+                    if (!slider || !display) return;
+                    slider.addEventListener('input', createDebounced(() => {
+                        const val = fmt(slider.value);
+                        this.updateConfig(config, val);
+                        display.textContent = typeof val === 'number' ? val.toFixed(val % 1 === 0 ? 0 : 1) : val;
+                        this.debouncedRefresh();
+                    }));
+                });
+                const waveMap = [
+                    { id: 'waveRecentSlider', config: 'wavePrediction.recentPeriods', fmt: v => parseInt(v) },
+                    { id: 'waveConsecutiveSlider', config: 'wavePrediction.consecutiveThreshold', fmt: v => parseInt(v) },
+                ];
+                waveMap.forEach(({ id, config, fmt }) => {
+                    const slider = document.getElementById(id);
+                    const display = document.getElementById(id.replace('Slider', 'Value'));
+                    if (!slider || !display) return;
+                    slider.addEventListener('input', createDebounced(() => {
+                        const val = fmt(slider.value);
+                        this.updateConfig(config, val);
+                        display.textContent = val;
+                        this.debouncedRefresh();
+                    }));
+                });
+                document.querySelectorAll('.api-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        if (btn.dataset.config) { try { this.applyPresetConfig(JSON.parse(btn.dataset.config)); } catch (e) {} }
+                        this.apiUrl = btn.dataset.url;
+                        this.loadData().then(() => { this.mergeAllData(); this.refreshAll(); });
+                    });
+                });
+                document.getElementById('applyFinance').addEventListener('click', () => {
+                    FINANCE_CONFIG.principal = parseFloat(document.getElementById('principal').value);
+                    FINANCE_CONFIG.betAmount = parseFloat(document.getElementById('betAmount').value);
+                    FINANCE_CONFIG.odds = parseFloat(document.getElementById('odds').value);
+                    FINANCE_CONFIG.multiplier = parseFloat(document.getElementById('multiplier').value);
+                    FINANCE_CONFIG.startPeriod = parseInt(document.getElementById('startPeriod').value);
+                    this.financeTracker = { currentPrincipal: FINANCE_CONFIG.principal, currentBetBase: FINANCE_CONFIG.betAmount, lossStreak: 0, history: [] };
+                    this.saveFinanceConfig();
+                    this.refreshAll();
+                });
+            }
+            updateConfig(path, value) {
+                const keys = path.split('.');
+                let target = CONFIG;
+                for (let i = 0; i < keys.length - 1; i++) { if (!target[keys[i]]) target[keys[i]] = {}; target = target[keys[i]]; }
+                target[keys[keys.length - 1]] = value;
+            }
+            applyPresetConfig(config) {
+                const sliderMap = {
+                    'predictionCount': 'countSlider', 'killCount': 'killCountSlider', 'weights.frequency': 'frequencySlider',
+                    'weights.omission': 'omissionSlider', 'weights.trend': 'trendSlider', 'fivePeriodDoublePenalty': 'fivePeriodSlider',
+                    'zodiacFrequencyPenalty': 'zodiacPenaltySlider', 'omissionBoost.threshold': 'thresholdSlider', 'omissionBoost.multiplier': 'multiplierSlider',
+                    'numberPrediction.frequentCount': 'frequentCountSlider', 'numberPrediction.reboundCount': 'reboundCountSlider',
+                    'numberPrediction.frequencyWeight': 'numberFrequencySlider', 'numberPrediction.trendWeight': 'numberTrendSlider',
+                    'numberPrediction.omissionThreshold': 'numberOmissionThresholdSlider', 'numberPrediction.reboundOmissionMax': 'reboundOmissionMaxSlider',
+                    'numberPrediction.reboundOmissionMin': 'reboundOmissionMinSlider', 'wavePrediction.recentPeriods': 'waveRecentSlider',
+                    'wavePrediction.consecutiveThreshold': 'waveConsecutiveSlider'
+                };
+                Object.entries(config).forEach(([key, value]) => {
+                    this.updateConfig(key, value);
+                    const sliderId = sliderMap[key];
+                    if (sliderId && document.getElementById(sliderId)) {
+                        const isPercent = key.includes('Weight') || key.includes('Penalty') || key.includes('frequency') || key.includes('omission') || key.includes('trend');
+                        const sv = isPercent ? value * 10 : value;
+                        document.getElementById(sliderId).value = sv;
+                        const disp = document.getElementById(sliderId.replace('Slider', 'Value'));
+                        if (disp) disp.textContent = isPercent ? value.toFixed(1) : value;
+                    }
+                });
+            }
+            debouncedRefresh() { clearTimeout(this.debounceTimer); this.debounceTimer = setTimeout(() => this.refreshAll(), 500); }
+            refreshAll() {
+                this.accuracyStats = {
+                    total: 0, correct: 0, killTotal: 0, killCorrect: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0,
+                    killCurrentStreak: 0, killMaxStreak: 0, killCurrentMissStreak: 0, killMaxMissStreak: 0,
+                    financeStats: { totalProfit: 0, maxPrincipal: FINANCE_CONFIG.principal, minPrincipal: FINANCE_CONFIG.principal, totalBets: 0, currentStreak: 0, maxStreak: 0 },
+                    middleSeven: { total: 0, correct: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0 },
+                    sideFive: { total: 0, correct: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0 },
+                    waveStats: { total: 0, correct: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0, wave1Correct: 0, wave2Correct: 0, bothCorrect: 0 },
+                    planOne: { total: 0, correct: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0 },
+                    planTwo: { total: 0, correct: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0 }
+                };
+                this.numberStats = { total: 0, correct: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0 };
+                this.calculateZodiacStats();
+                this.runHistoricalValidation();
+                this.predictNextIssue();
+                this.renderZodiacStats();
+                this.renderCurrentResult();
+                this.updateStatistics();
+            }
+
+            getMainDefendHit(animals, specialCode) {
+                if (!animals || !specialCode) return { mainHit: false, defendHit: false };
+                const mainSet = new Set();
+                const defendSet = new Set();
+                animals.forEach(animal => {
+                    const numbers = ZODIAC[animal]?.numbers || [];
+                    numbers.forEach(num => {
+                        const wave = NUMBER_TO_WAVE[num.toString().padStart(2, '0')] || '蓝';
+                        if (wave === '红') { defendSet.add(num); } else { mainSet.add(num); }
+                    });
+                });
+                const specialNum = parseInt(specialCode);
+                return { mainHit: mainSet.has(specialNum), defendHit: defendSet.has(specialNum) };
+            }
+
+            runHistoricalValidation() {
+                const results = [];
+                const startIndex = CONFIG.minHistory;
+                this.accuracyStats = {
+                    total: 0, correct: 0, killTotal: 0, killCorrect: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0,
+                    killCurrentStreak: 0, killMaxStreak: 0, killCurrentMissStreak: 0, killMaxMissStreak: 0,
+                    financeStats: { totalProfit: 0, maxPrincipal: FINANCE_CONFIG.principal, minPrincipal: FINANCE_CONFIG.principal, totalBets: 0, currentStreak: 0, maxStreak: 0 },
+                    middleSeven: { total: 0, correct: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0 },
+                    sideFive: { total: 0, correct: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0 },
+                    waveStats: { total: 0, correct: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0, wave1Correct: 0, wave2Correct: 0, bothCorrect: 0 },
+                    planOne: { total: 0, correct: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0 },
+                    planTwo: { total: 0, correct: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0 }
+                };
+                this.numberStats = { total: 0, correct: 0, currentStreak: 0, maxStreak: 0, currentMissStreak: 0, maxMissStreak: 0 };
+                this.monthlyStats.clear();
+                this.financeTracker = { currentPrincipal: FINANCE_CONFIG.principal, currentBetBase: FINANCE_CONFIG.betAmount, lossStreak: 0, history: [] };
+                for (let i = startIndex; i < this.historyData.length; i++) {
+                    const current = this.historyData[i];
+                    const historyUpToNow = this.historyData.slice(0, i);
+                    const predictor = new LotteryPredictor(historyUpToNow);
+                    const { recommends, kills, sortedList } = predictor.predictNext(current.period);
+                    const wavePrediction = predictor.predictWaves(current.period);
+                    const hit = recommends.some(p => p.animal === current.special);
+                    this.accuracyStats.total++;
+                    if (hit) { this.accuracyStats.correct++; this.accuracyStats.currentStreak++; this.accuracyStats.currentMissStreak = 0; this.accuracyStats.maxStreak = Math.max(this.accuracyStats.maxStreak, this.accuracyStats.currentStreak); } else { this.accuracyStats.currentStreak = 0; this.accuracyStats.currentMissStreak++; this.accuracyStats.maxMissStreak = Math.max(this.accuracyStats.maxMissStreak, this.accuracyStats.currentMissStreak); }
+                    const isKillCorrect = !kills.some(k => k.animal === current.special);
+                    this.accuracyStats.killTotal++;
+                    if (isKillCorrect) { this.accuracyStats.killCorrect++; this.accuracyStats.killCurrentStreak++; this.accuracyStats.killCurrentMissStreak = 0; this.accuracyStats.killMaxStreak = Math.max(this.accuracyStats.killMaxStreak, this.accuracyStats.killCurrentStreak); } else { this.accuracyStats.killCurrentStreak = 0; this.accuracyStats.killCurrentMissStreak++; this.accuracyStats.killMaxMissStreak = Math.max(this.accuracyStats.killMaxMissStreak, this.accuracyStats.killCurrentMissStreak); }
+                    
+                    const middleSevenAnimals = sortedList.slice(2, 9).map(s => s.animal);
+                    const sideFiveAnimals = [...sortedList.slice(0, 2).map(s => s.animal), ...sortedList.slice(9, 12).map(s => s.animal)];
+                    const isMiddleHit = middleSevenAnimals.includes(current.special);
+                    const isSideHit = sideFiveAnimals.includes(current.special);
+                    this.accuracyStats.middleSeven.total++;
+                    if (isMiddleHit) { this.accuracyStats.middleSeven.correct++; this.accuracyStats.middleSeven.currentStreak++; this.accuracyStats.middleSeven.currentMissStreak = 0; this.accuracyStats.middleSeven.maxStreak = Math.max(this.accuracyStats.middleSeven.maxStreak, this.accuracyStats.middleSeven.currentStreak); } else { this.accuracyStats.middleSeven.currentStreak = 0; this.accuracyStats.middleSeven.currentMissStreak++; this.accuracyStats.middleSeven.maxMissStreak = Math.max(this.accuracyStats.middleSeven.maxMissStreak, this.accuracyStats.middleSeven.currentMissStreak); }
+                    this.accuracyStats.sideFive.total++;
+                    if (isSideHit) { this.accuracyStats.sideFive.correct++; this.accuracyStats.sideFive.currentStreak++; this.accuracyStats.sideFive.currentMissStreak = 0; this.accuracyStats.sideFive.maxStreak = Math.max(this.accuracyStats.sideFive.maxStreak, this.accuracyStats.sideFive.currentStreak); } else { this.accuracyStats.sideFive.currentStreak = 0; this.accuracyStats.sideFive.currentMissStreak++; this.accuracyStats.sideFive.maxMissStreak = Math.max(this.accuracyStats.sideFive.maxMissStreak, this.accuracyStats.sideFive.currentMissStreak); }
+                    
+                    const actualWave = NUMBER_TO_WAVE[current.code] || '蓝';
+                    let waveHit = false, wave1Hit = false, wave2Hit = false;
+                    if (wavePrediction.wave1 && wavePrediction.wave2) {
+                        wave1Hit = wavePrediction.wave1 === actualWave;
+                        wave2Hit = wavePrediction.wave2 === actualWave;
+                        waveHit = wave1Hit || wave2Hit;
+                        this.accuracyStats.waveStats.total++;
+                        if (waveHit) { this.accuracyStats.waveStats.correct++; this.accuracyStats.waveStats.currentStreak++; this.accuracyStats.waveStats.currentMissStreak = 0; this.accuracyStats.waveStats.maxStreak = Math.max(this.accuracyStats.waveStats.maxStreak, this.accuracyStats.waveStats.currentStreak); } else { this.accuracyStats.waveStats.currentStreak = 0; this.accuracyStats.waveStats.currentMissStreak++; this.accuracyStats.waveStats.maxMissStreak = Math.max(this.accuracyStats.waveStats.maxMissStreak, this.accuracyStats.waveStats.currentMissStreak); }
+                        if (wave1Hit) this.accuracyStats.waveStats.wave1Correct++;
+                        if (wave2Hit) this.accuracyStats.waveStats.wave2Correct++;
+                        if (wave1Hit && wave2Hit) this.accuracyStats.waveStats.bothCorrect++;
+                    }
+                    const planOneAnimals = sortedList.slice(0, 9).map(s => s.animal);
+                    const planOneHit = planOneAnimals.includes(current.special);
+                    const planTwoAnimals = sortedList.slice(2, 9).map(s => s.animal);
+                    const planTwoHit = planTwoAnimals.includes(current.special);
+                    const planOneMainDefend = this.getMainDefendHit(planOneAnimals, current.code);
+                    const planTwoMainDefend = this.getMainDefendHit(planTwoAnimals, current.code);
+                    
+                    this.accuracyStats.planOne.total++;
+                    if (planOneHit) { this.accuracyStats.planOne.correct++; this.accuracyStats.planOne.currentStreak++; this.accuracyStats.planOne.currentMissStreak = 0; this.accuracyStats.planOne.maxStreak = Math.max(this.accuracyStats.planOne.maxStreak, this.accuracyStats.planOne.currentStreak); } else { this.accuracyStats.planOne.currentStreak = 0; this.accuracyStats.planOne.currentMissStreak++; this.accuracyStats.planOne.maxMissStreak = Math.max(this.accuracyStats.planOne.maxMissStreak, this.accuracyStats.planOne.currentMissStreak); }
+                    this.accuracyStats.planTwo.total++;
+                    if (planTwoHit) { this.accuracyStats.planTwo.correct++; this.accuracyStats.planTwo.currentStreak++; this.accuracyStats.planTwo.currentMissStreak = 0; this.accuracyStats.planTwo.maxStreak = Math.max(this.accuracyStats.planTwo.maxStreak, this.accuracyStats.planTwo.currentStreak); } else { this.accuracyStats.planTwo.currentStreak = 0; this.accuracyStats.planTwo.currentMissStreak++; this.accuracyStats.planTwo.maxMissStreak = Math.max(this.accuracyStats.planTwo.maxMissStreak, this.accuracyStats.planTwo.currentMissStreak); }
+                    const killTailInfo = this.getCurrentKillTailFromHistory(historyUpToNow);
+                    const killTail = killTailInfo ? killTailInfo.killTail : null;
+                    const financeData = this.calculateFinance(recommends, hit, current.period);
+                    this.accuracyStats.financeStats.totalProfit += financeData.profit;
+                    this.accuracyStats.financeStats.maxPrincipal = Math.max(this.accuracyStats.financeStats.maxPrincipal, financeData.currentPrincipal);
+                    this.accuracyStats.financeStats.minPrincipal = Math.min(this.accuracyStats.financeStats.minPrincipal, financeData.currentPrincipal);
+                    this.accuracyStats.financeStats.totalBets += financeData.totalBet;
+                    this.accuracyStats.financeStats.currentStreak = this.financeTracker.lossStreak;
+                    this.accuracyStats.financeStats.maxStreak = Math.max(this.accuracyStats.financeStats.maxStreak, this.financeTracker.lossStreak);
+                    const [year, month] = current.date.split('-');
+                    const monthKey = `${year}-${month.padStart(2,'0')}`;
+                    if (!this.monthlyStats.has(monthKey)) this.monthlyStats.set(monthKey, { total: 0, correct: 0, killTotal: 0, killCorrect: 0, numberTotal: 0, numberCorrect: 0,
+                        totalProfit: 0, totalBets: 0, maxPrincipal: 0, minPrincipal: Infinity, middleSevenTotal: 0, middleSevenCorrect: 0, sideFiveTotal: 0, sideFiveCorrect: 0,
+                        waveTotal: 0, waveCorrect: 0, wave1Correct: 0, wave2Correct: 0, planOneTotal: 0, planOneCorrect: 0, planTwoTotal: 0, planTwoCorrect: 0 });
+                    const ms = this.monthlyStats.get(monthKey);
+                    ms.total++; if (hit) ms.correct++;
+                    ms.killTotal++; if (isKillCorrect) ms.killCorrect++;
+                    ms.middleSevenTotal++; if (isMiddleHit) ms.middleSevenCorrect++;
+                    ms.sideFiveTotal++; if (isSideHit) ms.sideFiveCorrect++;
+                    ms.planOneTotal++; if (planOneHit) ms.planOneCorrect++;
+                    ms.planTwoTotal++; if (planTwoHit) ms.planTwoCorrect++;
+                    if (wavePrediction.wave1 && wavePrediction.wave2) { ms.waveTotal++; if (waveHit) ms.waveCorrect++; if (wave1Hit) ms.wave1Correct++; if (wave2Hit) ms.wave2Correct++; }
+                    const numPreds = recommends.flatMap(r => predictor.predictNumbersForZodiac(r.animal, current.period));
+                    const numHit = numPreds.some(p => p.number.toString().padStart(2, '0') === current.code);
+                    this.numberStats.total++; ms.numberTotal++;
+                    if (numHit) { this.numberStats.correct++; ms.numberCorrect++; this.numberStats.currentStreak++; this.numberStats.currentMissStreak = 0; this.numberStats.maxStreak = Math.max(this.numberStats.maxStreak, this.numberStats.currentStreak); } else { this.numberStats.currentStreak = 0; this.numberStats.currentMissStreak++; this.numberStats.maxMissStreak = Math.max(this.numberStats.maxMissStreak, this.numberStats.currentMissStreak); }
+                    ms.totalProfit += financeData.profit; ms.totalBets += financeData.totalBet;
+                    ms.maxPrincipal = Math.max(ms.maxPrincipal, financeData.currentPrincipal);
+                    ms.minPrincipal = Math.min(ms.minPrincipal, financeData.currentPrincipal);
+                    results.push(this.createHistoryRow(current, recommends, kills, hit, isKillCorrect, financeData, sortedList, isMiddleHit, isSideHit, wavePrediction, actualWave, waveHit, wave1Hit, wave2Hit, planOneAnimals, planOneHit, planTwoAnimals, planTwoHit, killTail, planOneMainDefend, planTwoMainDefend));
+                }
+                this.allHistoryResults = results;
+                this.renderHistoryWithFilter();
+                this.updateStatistics();
+            }
+            getCurrentKillTailFromHistory(historyData) {
+                if (historyData.length < 1) return null;
+                const lastRecord = historyData[historyData.length - 1];
+                const lastTail = lastRecord.code.slice(-1);
+                const killTail = KILL_TAIL_RULES[lastTail] || null;
+                return { lastTail, killTail, lastCode: lastRecord.code, lastPeriod: lastRecord.period };
+            }
+            calculateFinance(recommends, hit, period) {
+                if (period < FINANCE_CONFIG.startPeriod) return { totalBet: 0, profit: 0, currentPrincipal: this.financeTracker.currentPrincipal };
+                const numbersCount = recommends.reduce((acc, curr) => acc + ZODIAC[curr.animal].numbers.length, 0);
+                const totalBet = this.financeTracker.currentBetBase * numbersCount;
+                let profit = 0;
+                if (hit) { profit = (this.financeTracker.currentBetBase * FINANCE_CONFIG.odds) - totalBet; this.financeTracker.currentPrincipal += profit; this.financeTracker.lossStreak = 0; this.financeTracker.currentBetBase = FINANCE_CONFIG.betAmount; } else { profit = -totalBet; this.financeTracker.currentPrincipal += profit; this.financeTracker.lossStreak++; if (this.financeTracker.lossStreak >= 1) this.financeTracker.currentBetBase *= FINANCE_CONFIG.multiplier; }
+                const fd = { period, totalBet, profit, currentPrincipal: this.financeTracker.currentPrincipal };
+                this.financeTracker.history.push(fd);
+                return fd;
+            }
+            formatHistoryRow(r) {
+                if (this.historyFilter === 'planOne') {
+                    return this.formatPlanOnlyRow(r, 'planOne');
+                } else if (this.historyFilter === 'planTwo') {
+                    return this.formatPlanOnlyRow(r, 'planTwo');
+                } else {
+                    return this.formatFullHistoryRow(r);
+                }
+            }
+            
+            formatFullHistoryRow(r) {
+                const numPredsHtml = r.recommends.map(p => {
+                    const numStr = p.numbers.map(n => n.number.toString().padStart(2, '0')).join('.');
+                    let tagCls = 'prediction-tag';
+                    if (r.middleSevenAnimals && r.middleSevenAnimals.includes(p.animal)) tagCls += ' middle-seven-tag';
+                    if (r.sideFiveAnimals && r.sideFiveAnimals.includes(p.animal)) tagCls += ' side-five-tag';
+                    const badgeHtml = (r.middleSevenAnimals && r.middleSevenAnimals.includes(p.animal)) ? '<span class="middle-seven-badge">中 7</span>' : ((r.sideFiveAnimals && r.sideFiveAnimals.includes(p.animal)) ? '<span class="side-five-badge">旁 5</span>' : '');
+                    return `<div class="${tagCls}" style="border-color:${ZODIAC[p.animal]?.color||'#6366f1'};color:${ZODIAC[p.animal]?.color||'#6366f1'}">${p.animal}${badgeHtml} ${p.boosted?'🔥':p.recentMiss?'⚠️':''} <span>(${p.omission})</span> <span class="tag-nums">${numStr}</span></div>`;
+                }).join('');
+                let waveHistoryHtml = '';
+                if (r.wavePrediction && r.wavePrediction.wave1 && r.wavePrediction.wave2) {
+                    const w1Cls = r.wavePrediction.wave1 === '红' ? 'red' : r.wavePrediction.wave1 === '蓝' ? 'blue' : 'green';
+                    const w2Cls = r.wavePrediction.wave2 === '红' ? 'red' : r.wavePrediction.wave2 === '蓝' ? 'blue' : 'green';
+                    const actualWCls = r.actualWave === '红' ? 'red' : r.actualWave === '蓝' ? 'blue' : 'green';
+                    waveHistoryHtml = `<div class="wave-section-divider"></div><div class="wave-history-row"><span style="color:#64748b;">🌊 波色预测：</span><span class="wave-mini-card wave-${w1Cls}">跟风:${r.wavePrediction.wave1}波 ${r.wave1Hit?'✅':'❌'}</span><span class="wave-mini-card wave-${w2Cls}">高频:${r.wavePrediction.wave2}波 ${r.wave2Hit?'✅':'❌'}</span><span style="color:#64748b;">实际：</span><span class="wave-mini-card wave-${actualWCls}">${r.actualWave}波</span><span style="color:${r.waveHit?'var(--success)':'var(--danger)'};font-weight:600;">${r.waveHit?'波色命中':'波色未中'}</span>${r.wavePrediction.excludedByConsecutive ? `<span style="font-size:0.7rem;color:#f59e0b;">(连开${r.wavePrediction.consecutiveCount}期已排除${r.wavePrediction.consecutiveWave}波)</span>` : ''}</div>`;
+                }
+                let extraCls = '';
+                if (r.planOneHit) extraCls += ' plan-one-hit';
+                if (r.planTwoHit) extraCls += ' plan-two-hit';
+                return `<div class="history-item ${r.hit?'hit-mark':'miss-mark'} ${r.manualEntry?'manual-entry':''}${extraCls}"><div class="history-meta"><div>第${r.period}期 ${r.manualEntry?'<span class="manual-badge">📝手动</span>':''}</div><div>${r.date}</div><div style="color:${r.hit?'var(--success)':'var(--danger)'}">${r.hit?'命中':'未中'} | 中 7:${r.isMiddleHit?'<span style="color:var(--success)">✔</span>':'<span style="color:var(--danger)">✖</span>'} | 旁 5:${r.isSideHit?'<span style="color:var(--success)">✔</span>':'<span style="color:var(--danger)">✖</span>'}</div>${r.killTail ? `<div><span style="color:#dc2626;font-weight:600;">⚔️自动杀${r.killTail}尾</span></div>` : ''}</div><div class="history-content"><div><span style="color:#64748b;">开奖号码：</span>${this.renderHistoryNumbers(r.winningNumbers)}</div>${waveHistoryHtml}<div><span style="color:#64748b;">预测生肖(含号码)：</span><div class="prediction-tags">${numPredsHtml}</div></div><div><span style="color:#64748b;">杀肖结果：</span>${r.kills.map(k=>`<span style="color:${k.animal===r.special?'var(--danger)':'var(--success)'}">${k.animal}${k.animal===r.special?'✖':'✔'}</span>`).join(' ')}</div><div class="finance-info"><div class="finance-item"><div class="finance-label">总投注</div><div class="finance-value finance-negative">¥${r.finance.totalBet.toLocaleString()}</div></div><div class="finance-item"><div class="finance-label">净利润</div><div class="finance-value ${r.finance.profit>=0?'finance-positive':'finance-negative'}">¥${r.finance.profit.toLocaleString()}</div></div><div class="finance-item"><div class="finance-label">剩余本金</div><div class="finance-value">¥${r.finance.currentPrincipal.toLocaleString()}</div></div></div></div></div>`;
+            }
+            
+            formatPlanOnlyRow(r, planType) {
+                const detailedHtml = this.generateDetailedPlanValidationHTML(r, planType);
+                const hitStatus = planType === 'planOne' ? r.planOneHit : r.planTwoHit;
+                const extraCls = hitStatus ? 'hit-mark' : 'miss-mark';
+                return `<div class="history-item ${extraCls} ${r.manualEntry?'manual-entry':''}">
+                            <div class="history-meta">
+                                <div>第${r.period}期 ${r.manualEntry?'<span class="manual-badge">📝手动</span>':''}</div>
+                                <div>${r.date}</div>
+                                <div style="color:${hitStatus?'var(--success)':'var(--danger)'}">${hitStatus?'✅ 方案生肖命中':'❌ 方案生肖未中'}</div>
+                            </div>
+                            <div class="history-content">
+                                ${detailedHtml}
+                                <div class="finance-info">
+                                    <div class="finance-item"><div class="finance-label">总投注</div><div class="finance-value finance-negative">¥${r.finance.totalBet.toLocaleString()}</div></div>
+                                    <div class="finance-item"><div class="finance-label">净利润</div><div class="finance-value ${r.finance.profit>=0?'finance-positive':'finance-negative'}">¥${r.finance.profit.toLocaleString()}</div></div>
+                                    <div class="finance-item"><div class="finance-label">剩余本金</div><div class="finance-value">¥${r.finance.currentPrincipal.toLocaleString()}</div></div>
+                                </div>
+                            </div>
+                        </div>`;
+            }
+            
+            renderHistoryNumbers(numbers) {
+                if (numbers.length <= 1) return this.renderSingleNumber(numbers[0]);
+                const special = numbers[numbers.length - 1];
+                const normal = numbers.slice(0, -1);
+                return `<div class="number-combination"><div class="number-grid">${normal.map(n=>this.renderSingleNumber(n)).join('')}</div><div class="plus-between">+</div><div class="number-grid">${this.renderSingleNumber(special)}</div></div>`;
+            }
+
+            createHistoryRow(record, recommends, kills, hit, isKillCorrect, finance, sortedList, isMiddleHit, isSideHit, wavePrediction, actualWave, waveHit, wave1Hit, wave2Hit, planOneAnimals, planOneHit, planTwoAnimals, planTwoHit, killTail, planOneMainDefend, planTwoMainDefend) {
+                const predictor = new LotteryPredictor(this.historyData.slice(0, this.historyData.indexOf(record)));
+                const numberPredictions = recommends.flatMap(r => predictor.predictNumbersForZodiac(r.animal, record.period));
+                const middleSevenAnimals = sortedList.slice(2, 9).map(s => s.animal);
+                const sideFiveAnimals = [...sortedList.slice(0, 2).map(s => s.animal), ...sortedList.slice(9, 12).map(s => s.animal)];
+                return {
+                    period: record.period, date: record.date, special: record.special, specialNumber: record.code,
+                    winningNumbers: [...(record.p ? record.p.split(',') : []), record.code].map(n => parseInt(n)),
+                    recommends: recommends.map(p => ({ animal: p.animal, boosted: p.boosted, recentMiss: p.recentMiss, omission: p.omission, numbers: predictor.predictNumbersForZodiac(p.animal, record.period) })),
+                    kills, hit, isKillCorrect, finance, numberPredictions, manualEntry: record.manual || false, sortedList, middleSevenAnimals, sideFiveAnimals,
+                    isMiddleHit: isMiddleHit !== undefined ? isMiddleHit : middleSevenAnimals.includes(record.special),
+                    isSideHit: isSideHit !== undefined ? isSideHit : sideFiveAnimals.includes(record.special),
+                    wavePrediction: wavePrediction || null, actualWave: actualWave || '蓝', waveHit: waveHit || false, wave1Hit: wave1Hit || false, wave2Hit: wave2Hit || false,
+                    planOneAnimals: planOneAnimals || [], planOneHit: planOneHit !== undefined ? planOneHit : (planOneAnimals || []).includes(record.special),
+                    planTwoAnimals: planTwoAnimals || [], planTwoHit: planTwoHit !== undefined ? planTwoHit : (planTwoAnimals || []).includes(record.special),
+                    killTail: killTail || null, planOneMainDefend: planOneMainDefend || { mainHit: false, defendHit: false }, planTwoMainDefend: planTwoMainDefend || { mainHit: false, defendHit: false }
+                };
+            }
+            
+            predictNextIssue() {
+                if (this.historyData.length < CONFIG.minHistory) {
+                    document.getElementById('currentPrediction').innerHTML = '<p style="text-align:center;padding:2rem;color:#94a3b8;">历史数据不足，无法生成预测。请录入更多数据。</p>';
+                    document.getElementById('killPrediction').innerHTML = '';
+                    document.getElementById('currentWavePrediction').innerHTML = '<p style="text-align:center;padding:1rem;color:#94a3b8;">波色预测需要更多历史数据</p>';
+                    document.getElementById('killTailBadge').textContent = '--';
+                    document.getElementById('killTailDetail').textContent = '上期开--尾 → 本期自动杀--尾';
+                    return;
+                }
+                const lastIssue = this.historyData[this.historyData.length - 1];
+                const nextPeriod = lastIssue.period + 1;
+                const killTail = this.getCurrentKillTail();
+                if (killTail) {
+                    document.getElementById('killTailBadge').textContent = '杀' + killTail + '尾';
+                    document.getElementById('killTailDetail').textContent = `上期第${lastIssue.period}期开${lastIssue.code}(${lastIssue.code.slice(-1)}尾) → 本期自动杀${killTail}尾`;
+                } else {
+                    document.getElementById('killTailBadge').textContent = '--';
+                    document.getElementById('killTailDetail').textContent = '上期开--尾 → 本期自动杀--尾';
+                }
+                document.querySelector('#currentPrediction').previousElementSibling.innerHTML = `<h2 style="margin:2rem 0 1rem;">🔮 下一期：第${nextPeriod}期 预测生肖</h2>`;
+                const predictor = new LotteryPredictor(this.historyData);
+                const { recommends, kills, sortedList } = predictor.predictNext(nextPeriod);
+                const middleSevenAnimals = sortedList.slice(2, 9).map(s => s.animal);
+                const sideFiveAnimals = [...sortedList.slice(0, 2).map(s => s.animal), ...sortedList.slice(9, 12).map(s => s.animal)];
+                const wavePrediction = predictor.predictWaves(nextPeriod);
+                this.currentWavePredictionData = wavePrediction;
+                const recommendsWithNumbers = recommends.map(item => {
+                    const rawNumbers = predictor.predictNumbersForZodiac(item.animal, nextPeriod);
+                    return { ...item, numbers: rawNumbers };
+                });
+                this.currentPredictionData = { recommends: recommendsWithNumbers, kills, sortedList, middleSevenAnimals, sideFiveAnimals };
+                this.refreshPlanData();
+                const planDisplayArea = document.getElementById('planDisplayArea');
+                const planDisplayContent = document.getElementById('planDisplayContent');
+                if (planDisplayArea.classList.contains('expanded') && this.currentPlanDisplay) {
+                    const killTailCurr = this.getCurrentKillTail();
+                    let planLabel;
+                    if (this.currentPlanDisplay === 'planOne') planLabel = '预测九肖方案（前9个生肖）';
+                    else planLabel = '预测七肖方案（第3-9个生肖·中七肖）';
+                    const planDetail = this.regeneratePlanDetailForDisplay(this.currentPlanDisplay === 'planOne' ? this.currentPlanOneData.animals : this.currentPlanTwoData.animals, killTailCurr, this.currentWavePredictionData);
+                    const html = this.formatPlanDisplayHTML(planDetail, planLabel, killTailCurr);
+                    planDisplayContent.innerHTML = html;
+                }
+                let waveHtml = '';
+                if (wavePrediction.wave1 && wavePrediction.wave2) {
+                    const w1Cls = wavePrediction.wave1 === '红' ? 'red' : wavePrediction.wave1 === '蓝' ? 'blue' : 'green';
+                    const w2Cls = wavePrediction.wave2 === '红' ? 'red' : wavePrediction.wave2 === '蓝' ? 'blue' : 'green';
+                    const freqStr = WAVE_NAMES.map(w => `${w}:${wavePrediction.waveFrequency[w]||0}次`).join(' | ');
+                    waveHtml = `<div class="wave-card wave-${w1Cls}"><div style="font-size:2rem;font-weight:bold;">${wavePrediction.wave1}波</div><div style="font-size:0.9rem;opacity:0.85;">📌 策略①：跟随上期波色</div><div style="font-size:1.2rem;margin-top:0.3rem;">上期开出${wavePrediction.wave1}波 → 本期跟${wavePrediction.wave1}波</div></div><div class="wave-card wave-${w2Cls}"><div style="font-size:2rem;font-weight:bold;">${wavePrediction.wave2}波</div><div style="font-size:0.9rem;opacity:0.85;">📊 策略②：近${CONFIG.wavePrediction.recentPeriods}期高频波色</div><div style="font-size:0.8rem;margin-top:0.3rem;opacity:0.75;">${freqStr}</div>${wavePrediction.excludedByConsecutive ? `<div style="font-size:0.75rem;margin-top:0.3rem;color:#ffd700;">⚠️ ${wavePrediction.consecutiveWave}波连开${wavePrediction.consecutiveCount}期已排除</div>` : ''}<div style="font-size:0.75rem;margin-top:0.2rem;opacity:0.7;">连开阈值:${CONFIG.wavePrediction.consecutiveThreshold}期 | 两波不重复</div></div>`;
+                } else { waveHtml = '<p style="text-align:center;padding:1rem;color:#94a3b8;">波色预测数据不足</p>'; }
+                document.getElementById('currentWavePrediction').innerHTML = waveHtml;
+                document.getElementById('currentPrediction').innerHTML = recommendsWithNumbers.map((item, idx) => {
+                    const numbers = item.numbers.map(n => n.number.toString().padStart(2, '0')).join('.');
+                    const isMiddle = middleSevenAnimals.includes(item.animal);
+                    const isSide = sideFiveAnimals.includes(item.animal);
+                    let extraCls = '';
+                    if (isMiddle) extraCls = ' middle-seven-highlight';
+                    if (isSide) extraCls = ' side-five-highlight';
+                    const badgeHtml = isMiddle ? '<span class="middle-seven-badge">中 7</span>' : (isSide ? '<span class="side-five-badge">旁 5</span>' : '');
+                    return `<div class="prediction-card${extraCls}"><div class="zodiac-tag"><span style="margin-right:0.5rem;font-size:1.5rem;">${item.animal} ${item.boosted?'🔥':item.recentMiss?'⚠️':'✨'}</span>${badgeHtml}</div><div class="compact-numbers">${numbers}</div><div style="font-size:0.85rem;opacity:0.9;">排名#${idx+1} | 包含${CONFIG.numberPrediction.frequentCount}高频+${CONFIG.numberPrediction.reboundCount}回弹号码</div><div style="font-size:1.3rem;margin-top:0.5rem;opacity:0.7;">已连续遗漏 ${item.omission} 期</div></div>`;
+                }).join('');
+                document.getElementById('killPrediction').innerHTML = kills.map(item => `<div class="kill-prediction-card"><div class="zodiac-tag"><span style="margin-right:0.5rem;font-size:1.5rem;">${item.animal}</span>⚔️</div><div style="font-size:1.5rem;margin:0.5rem 0;">${(item.score*100).toFixed(1)}%</div><div style="font-size:0.85rem;opacity:0.9;">${item.omission>30?'长期热门':'近期高频'}</div><div style="font-size:1.3rem;margin-top:0.5rem;opacity:0.7;">最近出现 ${item.omission} 期前</div></div>`).join('');
+            }
+            getNextDate(currentDate) {
+                const d = new Date(currentDate);
+                d.setDate(d.getDate() + 2);
+                return d.toISOString().split('T')[0];
+            }
+            renderZodiacStats() {
+                document.getElementById('zodiacStatistics').innerHTML = Object.entries(ZODIAC).map(([animal, data]) => {
+                    const omission = this.zodiacStats.omissions[animal];
+                    const progress = Math.min(100, omission / 30 * 100);
+                    return `<div class="stat-card"><div style="display:flex;align-items:center;margin-bottom:1rem;"><div style="width:40px;height:40px;border-radius:50%;background:${data.color};margin-right:1rem;"></div><h3 style="color:${data.color};">${animal}</h3></div><div style="display:flex;justify-content:space-between;"><div><div style="font-size:0.85rem;color:#64748b;">出现次数</div><div style="font-size:1.25rem;font-weight:bold;">${this.zodiacStats.counts[animal]}</div></div><div><div style="font-size:0.85rem;color:#64748b;">遗漏期数</div><div style="font-size:1.25rem;font-weight:bold;color:${omission>15?'#ef4444':'#f59e0b'}">${omission}</div></div></div><div style="margin-top:1rem;height:4px;background:#e2e8f0;border-radius:2px;"><div style="width:${progress}%;height:100%;background:${data.color};border-radius:2px;"></div></div></div>`;
+                }).join('');
+            }
+            renderMonthlyStats() {
+                const sorted = Array.from(this.monthlyStats.keys()).sort().reverse();
+                document.getElementById('monthlyStats').innerHTML = sorted.map(month => {
+                    const s = this.monthlyStats.get(month);
+                    const acc = s.total > 0 ? (s.correct / s.total * 100).toFixed(1) : 0;
+                    const kacc = s.killTotal > 0 ? (s.killCorrect / s.killTotal * 100).toFixed(1) : 0;
+                    const nacc = s.numberTotal > 0 ? (s.numberCorrect / s.numberTotal * 100).toFixed(1) : 0;
+                    const macc = s.middleSevenTotal > 0 ? (s.middleSevenCorrect / s.middleSevenTotal * 100).toFixed(1) : 0;
+                    const sacc = s.sideFiveTotal > 0 ? (s.sideFiveCorrect / s.sideFiveTotal * 100).toFixed(1) : 0;
+                    const wacc = s.waveTotal > 0 ? (s.waveCorrect / s.waveTotal * 100).toFixed(1) : 0;
+                    const p1acc = s.planOneTotal > 0 ? (s.planOneCorrect / s.planOneTotal * 100).toFixed(1) : 0;
+                    const p2acc = s.planTwoTotal > 0 ? (s.planTwoCorrect / s.planTwoTotal * 100).toFixed(1) : 0;
+                    return `<div class="stat-card"><div style="display:flex;justify-content:space-between;margin-bottom:1rem;"><h3>📅 ${month}</h3><div style="font-size:0.85rem;color:#64748b;">${s.total}期</div></div><div style="display:grid;gap:0.5rem;"><div style="display:flex;justify-content:space-between;"><span>预测准确率</span><strong style="color:var(--success);">${acc}%</strong></div><div style="display:flex;justify-content:space-between;"><span>杀肖准确率</span><strong style="color:var(--success);">${kacc}%</strong></div><div style="display:flex;justify-content:space-between;"><span>号码准确率</span><strong style="color:var(--success);">${nacc}%</strong></div><div style="display:flex;justify-content:space-between;"><span>波色总命中率</span><strong style="color:#3b82f6;">${wacc}%</strong></div><div style="display:flex;justify-content:space-between;"><span>方案一(九肖)命中率</span><strong style="color:#8b5cf6;">${p1acc}%</strong></div><div style="display:flex;justify-content:space-between;"><span>方案二(七肖)命中率</span><strong style="color:#6366f1;">${p2acc}%</strong></div><div style="display:flex;justify-content:space-between;"><span>中间七肖命中率</span><strong style="color:#8b5cf6;">${macc}%</strong></div><div style="display:flex;justify-content:space-between;"><span>旁边五肖命中率</span><strong style="color:#a5b4fc;">${sacc}%</strong></div><div style="display:flex;justify-content:space-between;"><span>净利润</span><strong class="${s.totalProfit>=0?'finance-positive':'finance-negative'}">¥${s.totalProfit.toLocaleString()}</strong></div></div></div>`;
+                }).join('');
+            }
+            updateStatistics() {
+                const acc = this.accuracyStats.total > 0 ? (this.accuracyStats.correct / this.accuracyStats.total * 100).toFixed(1) : 0;
+                const kacc = this.accuracyStats.killTotal > 0 ? (this.accuracyStats.killCorrect / this.accuracyStats.killTotal * 100).toFixed(1) : 0;
+                const wrong = this.accuracyStats.total - this.accuracyStats.correct;
+                const kwrong = this.accuracyStats.killTotal - this.accuracyStats.killCorrect;
+                const fs = this.accuracyStats.financeStats;
+                const nacc = this.numberStats.total > 0 ? (this.numberStats.correct / this.numberStats.total * 100).toFixed(1) : 0;
+                const nwrong = this.numberStats.total - this.numberStats.correct;
+                const ms = this.accuracyStats.middleSeven;
+                const macc = ms.total > 0 ? (ms.correct / ms.total * 100).toFixed(1) : 0;
+                const ss = this.accuracyStats.sideFive;
+                const sacc = ss.total > 0 ? (ss.correct / ss.total * 100).toFixed(1) : 0;
+                const ws = this.accuracyStats.waveStats;
+                const wacc = ws.total > 0 ? (ws.correct / ws.total * 100).toFixed(1) : 0;
+                const wwrong = ws.total - ws.correct;
+                const p1 = this.accuracyStats.planOne;
+                const p1acc = p1.total > 0 ? (p1.correct / p1.total * 100).toFixed(1) : 0;
+                const p1Wrong = p1.total - p1.correct;
+                const p2 = this.accuracyStats.planTwo;
+                const p2acc = p2.total > 0 ? (p2.correct / p2.total * 100).toFixed(1) : 0;
+                const p2Wrong = p2.total - p2.correct;
+                document.getElementById('statistics').innerHTML = `
+              <div class="stat-card"><div style="font-size:1rem;color:#64748b;">📈验证期数</div><div style="font-size:1.5rem;font-weight:bold;">${this.accuracyStats.total}</div></div>
+              <div class="stat-card"><div style="font-size:1rem;color:#64748b;">最后更新</div><div style="font-size:1.3rem;font-weight:bold;">${new Date().toLocaleTimeString()}</div></div>
+              <div class="stat-card"><div style="font-size:1rem;color:#64748b;">🛩️TG频道</div><div style="font-size:1.3rem;font-weight:bold;">@Aiycxt</div></div>
+              <div class="stat-card"><div style="font-size:1rem;color:#64748b;">🔮预测准确率</div><div style="font-size:1.5rem;font-weight:bold;color:var(--success);">${acc}%</div></div>
+              <div class="stat-card"><div style="font-size:1rem;color:#64748b;">总对/总错</div><div style="font-size:1.3rem;font-weight:bold;"><span style="color:var(--success);">${this.accuracyStats.correct}</span>/<span style="color:var(--danger);">${wrong}</span></div></div>
+              <div class="stat-card"><div style="font-size:1rem;color:#64748b;">最大连对/连错</div><div style="font-size:1.3rem;font-weight:bold;"><span style="color:var(--success);">${this.accuracyStats.maxStreak}</span>/<span style="color:var(--danger);">${this.accuracyStats.maxMissStreak}</span></div></div>
+              <div class="stat-card" style="border-left: 4px solid #8b5cf6;"><div style="font-size:1rem;color:#7c3aed;">📋方案一(九肖)命中率</div><div style="font-size:1.5rem;font-weight:bold;color:#8b5cf6;">${p1acc}%</div><div style="font-size:0.7rem;color:#7c3aed;">前9肖</div></div>
+              <div class="stat-card" style="border-left: 4px solid #8b5cf6;"><div style="font-size:1rem;color:#7c3aed;">📊方案一总对/总错</div><div style="font-size:1.3rem;font-weight:bold;"><span style="color:var(--success);">${p1.correct}</span>/<span style="color:var(--danger);">${p1Wrong}</span></div></div>
+              <div class="stat-card" style="border-left: 4px solid #8b5cf6;"><div style="font-size:1rem;color:#7c3aed;">方案一连对/连错</div><div style="font-size:1.3rem;font-weight:bold;"><span style="color:var(--success);">${p1.maxStreak}</span>/<span style="color:var(--danger);">${p1.maxMissStreak}</span></div></div>
+              <div class="stat-card" style="border-left: 4px solid #6366f1;"><div style="font-size:1rem;color:#4f46e5;">📋方案二(七肖)命中率</div><div style="font-size:1.5rem;font-weight:bold;color:#6366f1;">${p2acc}%</div><div style="font-size:0.7rem;color:#4f46e5;">第3-9肖(中七肖)</div></div>
+              <div class="stat-card" style="border-left: 4px solid #6366f1;"><div style="font-size:1rem;color:#4f46e5;">📊方案二总对/总错</div><div style="font-size:1.3rem;font-weight:bold;"><span style="color:var(--success);">${p2.correct}</span>/<span style="color:var(--danger);">${p2Wrong}</span></div></div>
+              <div class="stat-card" style="border-left: 4px solid #6366f1;"><div style="font-size:1rem;color:#4f46e5;">方案二连对/连错</div><div style="font-size:1.3rem;font-weight:bold;"><span style="color:var(--success);">${p2.maxStreak}</span>/<span style="color:var(--danger);">${p2.maxMissStreak}</span></div></div>
+              <div class="stat-card" style="border-left: 4px solid #3b82f6;"><div style="font-size:1rem;color:#2563eb;">🌊波色总命中率</div><div style="font-size:1.5rem;font-weight:bold;color:#3b82f6;">${wacc}%</div><div style="font-size:0.7rem;color:#2563eb;">两波有一中即算命中</div></div>
+              <div class="stat-card" style="border-left: 4px solid #3b82f6;"><div style="font-size:1rem;color:#2563eb;">波色总对/总错</div><div style="font-size:1.3rem;font-weight:bold;"><span style="color:var(--success);">${ws.correct}</span>/<span style="color:var(--danger);">${wwrong}</span></div></div>
+              <div class="stat-card" style="border-left: 4px solid #3b82f6;"><div style="font-size:1rem;color:#2563eb;">波色最大连对/连错</div><div style="font-size:1.3rem;font-weight:bold;"><span style="color:var(--success);">${ws.maxStreak}</span>/<span style="color:var(--danger);">${ws.maxMissStreak}</span></div></div>
+              <div class="stat-card" style="border-left: 4px solid #3b82f6;"><div style="font-size:1rem;color:#2563eb;">跟风波单独命中</div><div style="font-size:1.3rem;font-weight:bold;">${ws.wave1Correct}次</div></div>
+              <div class="stat-card" style="border-left: 4px solid #3b82f6;"><div style="font-size:1rem;color:#2563eb;">高频波单独命中</div><div style="font-size:1.3rem;font-weight:bold;">${ws.wave2Correct}次</div></div>
+              <div class="stat-card" style="border-left: 4px solid #3b82f6;"><div style="font-size:1rem;color:#2563eb;">两波同时命中</div><div style="font-size:1.3rem;font-weight:bold;">${ws.bothCorrect}次</div></div>
+              <div class="stat-card" style="border-left: 4px solid #8b5cf6;"><div style="font-size:1rem;color:#7c3aed;">🎯中间七肖命中率</div><div style="font-size:1.5rem;font-weight:bold;color:#8b5cf6;">${macc}%</div><div style="font-size:0.75rem;color:#7c3aed;">排名3-9位</div></div>
+              <div class="stat-card" style="border-left: 4px solid #8b5cf6;"><div style="font-size:1rem;color:#7c3aed;">中间最大连中</div><div style="font-size:1.5rem;font-weight:bold;color:var(--success);">${ms.maxStreak}</div></div>
+              <div class="stat-card" style="border-left: 4px solid #8b5cf6;"><div style="font-size:1rem;color:#7c3aed;">中间最大连错</div><div style="font-size:1.5rem;font-weight:bold;color:var(--danger);">${ms.maxMissStreak}</div></div>
+              <div class="stat-card" style="border-left: 4px solid #a5b4fc;"><div style="font-size:1rem;color:#6366f1;">📍旁边五肖命中率</div><div style="font-size:1.5rem;font-weight:bold;color:#a5b4fc;">${sacc}%</div><div style="font-size:0.75rem;color:#6366f1;">排名1-2+10-12位</div></div>
+              <div class="stat-card" style="border-left: 4px solid #a5b4fc;"><div style="font-size:1rem;color:#6366f1;">旁边最大连中</div><div style="font-size:1.5rem;font-weight:bold;color:var(--success);">${ss.maxStreak}</div></div>
+              <div class="stat-card" style="border-left: 4px solid #a5b4fc;"><div style="font-size:1rem;color:#6366f1;">旁边最大连错</div><div style="font-size:1.5rem;font-weight:bold;color:var(--danger);">${ss.maxMissStreak}</div></div>
+              <div class="stat-card"><div style="font-size:1rem;color:#64748b;">⚔️杀肖准确率</div><div style="font-size:1.5rem;font-weight:bold;color:var(--success);">${kacc}%</div></div>
+              <div class="stat-card"><div style="font-size:1rem;color:#64748b;">总对/总错</div><div style="font-size:1.3rem;font-weight:bold;"><span style="color:var(--success);">${this.accuracyStats.killCorrect}</span>/<span style="color:var(--danger);">${kwrong}</span></div></div>
+              <div class="stat-card"><div style="font-size:1rem;color:#64748b;">最大连对/连错</div><div style="font-size:1.3rem;font-weight:bold;"><span style="color:var(--success);">${this.accuracyStats.killMaxStreak}</span>/<span style="color:var(--danger);">${this.accuracyStats.killMaxMissStreak}</span></div></div>
+              <div class="stat-card"><div style="font-size:1rem;color:#64748b;">🔢号码准确率</div><div style="font-size:1.5rem;font-weight:bold;color:var(--success);">${nacc}%</div></div>
+              <div class="stat-card"><div style="font-size:1rem;color:#64748b;">总对/总错</div><div style="font-size:1.3rem;font-weight:bold;"><span style="color:var(--success);">${this.numberStats.correct}</span>/<span style="color:var(--danger);">${nwrong}</span></div></div>
+              <div class="stat-card"><div style="font-size:1rem;color:#64748b;">最大连对/连错</div><div style="font-size:1.3rem;font-weight:bold;"><span style="color:var(--success);">${this.numberStats.maxStreak}</span>/<span style="color:var(--danger);">${this.numberStats.maxMissStreak}</span></div></div>
+              <div class="stat-card"><div style="font-size:1rem;color:#64748b;">💰累计利润</div><div class="finance-value ${fs.totalProfit>=0?'finance-positive':'finance-negative'}">¥${fs.totalProfit.toLocaleString()}</div></div>
+              <div class="stat-card"><div style="font-size:1rem;color:#64748b;">📈最高本金</div><div class="finance-value finance-positive">¥${fs.maxPrincipal.toLocaleString()}</div></div>
+              <div class="stat-card"><div style="font-size:1rem;color:#64748b;">📉最低本金</div><div class="finance-value finance-negative">¥${fs.minPrincipal.toLocaleString()}</div></div>
+            `;
+                this.renderMonthlyStats();
+            }
+            setupControlToggle() {
+                const tb = document.getElementById('controlToggle');
+                const cp = document.getElementById('controlPanel');
+                tb.addEventListener('click', (e) => { e.stopPropagation(); this.controlPanelVisible = !this.controlPanelVisible; cp.classList.toggle('active', this.controlPanelVisible); });
+                document.addEventListener('click', (e) => { if (!cp.contains(e.target) && !tb.contains(e.target)) { this.controlPanelVisible = false; cp.classList.remove('active'); } });
+            }
+            setupZodiacToggle() {
+                const tb = document.getElementById('zodiacToggle');
+                const ct = document.getElementById('zodiacContainer');
+                tb.addEventListener('click', () => { ct.classList.toggle('expanded'); tb.innerHTML = ct.classList.contains('expanded') ? '📊 点击收起生肖大数据 ▲' : '📊 点击展开生肖大数据 ▼'; });
+            }
+            setupMonthlyToggle() {
+                const tb = document.getElementById('monthlyToggle');
+                const ct = document.getElementById('monthlyContainer');
+                tb.addEventListener('click', () => { ct.classList.toggle('expanded'); tb.innerHTML = ct.classList.contains('expanded') ? '📅 点击收起月度统计 ▲' : '📅 点击展开月度统计 ▼'; });
+            }
+            setupPageVisibility() { document.addEventListener('visibilitychange', () => { if (!document.hidden) this.refreshAll(); }); }
+
+            async init() {
+                this.showLoading();
+                try {
+                    this.loadManualData();
+                    await this.loadData();
+                    this.loadFinanceConfig();
+                    this.setupControlToggle();
+                    this.setupZodiacToggle();
+                    this.setupMonthlyToggle();
+                    this.setupPageVisibility();
+                    this.setupSliders();
+                    this.setupTabs();
+                    this.setupCopyButtons();
+                    this.setupManualEntry();
+                    this.setupPlanButtons();
+                    this.setupHistoryFilter();
+                    this.mergeAllData();
+                    this.calculateZodiacStats();
+                    this.runHistoricalValidation();
+                    this.predictNextIssue();
+                    this.renderZodiacStats();
+                    this.renderCurrentResult();
+                } finally { this.hideLoading(); }
+            }
+        }
+
+        window.addEventListener('load', () => {
+            const app = new MainApp();
+            app.init();
+            setInterval(() => app.refreshAll(), 300000);
+        });
+    </script>
+</body>
+</html>
